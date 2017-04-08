@@ -152,7 +152,7 @@ class Player(pg.sprite.Sprite):
         self.rect.center = (screen_width/2, screen_height/2)
 
 class Mob(pg.sprite.Sprite):
-    def __init__(self, game, position):
+    def __init__(self, game, position, move_freely=True):
         pg._layer = mob_layer
         pg.sprite.Sprite.__init__(self)
         self.game = game
@@ -169,6 +169,9 @@ class Mob(pg.sprite.Sprite):
         self.health = 200
         self.jump_delay = 750
         self.last_jump = 0
+        self.move_freely = move_freely
+        # For self.back_forth()
+        self.last_back_forth = 0
 
         # TODO:
         # Improve starting location
@@ -211,21 +214,27 @@ class Mob(pg.sprite.Sprite):
         # if hits:
         #     self.kill()
 
+        if self.move_freely:
+            self.free_move()
+        elif not self.move_freely:
+            # TODO function to make mobs move back and forth
+            self.back_forth()
+
         # TODO:
         # Fix distance
         # Find player
-        distance = self.game.player.rect.x - self.rect.x
-        if distance > 0:
-            self.move_right()
-        elif distance < 0:
-            self.move_left()
+        # distance = self.game.player.rect.x - self.rect.x
+        # if distance > 0:
+        #     self.move_right()
+        # elif distance < 0:
+        #     self.move_left()
 
-        last_pdu = abs(self.game.player.rect.y - self.rect.y)
-        if self.game.player.rect.y < self.rect.y:
-            pdu = abs(self.game.player.rect.y - self.rect.y)
-            if pdu < last_pdu:
-                self.jump()
-                last_pdu = pdu
+        # last_pdu = abs(self.game.player.rect.y - self.rect.y)
+        # if self.game.player.rect.y < self.rect.y:
+        #     pdu = abs(self.game.player.rect.y - self.rect.y)
+        #     if pdu < last_pdu:
+        #         self.jump()
+        #         last_pdu = pdu
 
         # Limit height
         if self.rect.y < 0:
@@ -259,6 +268,22 @@ class Mob(pg.sprite.Sprite):
             if now - self.last_jump > self.jump_delay:
                 self.velocity.y += -20
 
+    def free_move(self):
+        distance = self.game.player.rect.x - self.rect.x
+        if distance > 0:
+            self.move_right()
+        elif distance < 0:
+            self.move_left()
+
+        last_pdu = abs(self.game.player.rect.y - self.rect.y)
+        if self.game.player.rect.y < self.rect.y:
+            pdu = abs(self.game.player.rect.y - self.rect.y)
+            if pdu < last_pdu:
+                self.jump()
+                last_pdu = pdu
+
+    def back_forth(self):
+        now = pg.time.get_ticks()
 
 class Platform(pg.sprite.Sprite):
     def __init__(self, x, y, w, h):

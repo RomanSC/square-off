@@ -396,7 +396,7 @@ class Game:
             img = img.convert()
 
         pg.display.flip()
-        self.wait_for_key(mouse_too=False)
+        self.wait_for_key(mouse_too=True)
 
     def game_over_screen(self):
         if not self.running:
