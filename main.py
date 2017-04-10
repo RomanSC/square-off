@@ -34,6 +34,7 @@ class Game:
         with open(score_file, 'a+') as f: # Read writeable, start at the end
             f.seek(0) # Go to the first line
             self.score_file_lines = f.readlines() # Read in scores
+
             f.seek(0, 2) # Go back to the end
             f.close()
 
@@ -84,13 +85,12 @@ class Game:
                 f.write(x)
             f.close()
 
-    def new(self): # Start a new game
+    # Start a new game
+    def new(self):
         self.clock.tick(fps)
-        # TODO:
-        # Unsure if this is the best spot for this
-        # (or if I still need this for anything tbh)
-        self.lowest = 0
-        # Groups
+        game = self
+
+        # Sprite groups
         self.all_sprites_group = pg.sprite.LayeredUpdates()
         self.player_group = pg.sprite.Group()
         self.mobs_group = pg.sprite.Group()
@@ -98,43 +98,28 @@ class Game:
         self.floor_group = pg.sprite.Group()
         self.ui_group = pg.sprite.Group()
         self.bullets_group = pg.sprite.Group()
-        # TODO:
-        # On screen group
 
         # Individual sprites
-        game = self
         self.player = Player(game)
         self.all_sprites_group.add(self.player)
         self.player_group.add(self.player)
 
         # Platforms
-        # self.p_1 = Platform(0, screen_height - 40, screen_width + screen_width * 0.5, 40)
-        # self.p_2 = Platform(screen_width / 2, screen_height * 3 / 4, 100, 20)
-        # self.platforms_group.add(self.p_1)
-        # self.platforms_group.add(self.p_2)
-        # self.all_sprites_group.add(self.p_1)
-        # self.all_sprites_group.add(self.p_2)
         floor = platform_list[0]
-        self.floor = Platform(floor[0], floor[1], floor[2], floor[3])
+        self.floor = Platform(self, floor[0], floor[1], floor[2], floor[3])
         self.floor_group.add(self.floor)
         self.platforms_group.add(self.floor)
         self.all_sprites_group.add(self.floor)
 
         for i in range(1, len(platform_list)-1):
-            p = Platform(platform_list[i][0], platform_list[i][1], platform_list[i][2], platform_list[i][3])
+            p = Platform(self, platform_list[i][0], platform_list[i][1], platform_list[i][2], platform_list[i][3])
             self.platforms_group.add(p)
             self.all_sprites_group.add(p)
 
 
-        # TODO:
-        # Multiple mobs spawning on start
-        # self.mob = Mob()
-        # self.all_sprites_group.add(self.mob)
-        # self.mobs_group.add(self.mob)
+        # Mobs
         for m in range(int(self.player.level * difficulty)):
-        # while len(self.mobs_group) < int(self.player.level * 1.5):
             self.last_spawn = pg.time.get_ticks()
-            # x_location = random.randrange(0, screen_width)
             spawn_pos = random.choice(spawn_locations)
             m = Mob(self, spawn_pos)
             self.mobs_group.add(m)
@@ -149,18 +134,18 @@ class Game:
         # Run the game
         self.run()
 
+    # Game loop
     def run(self):
         self.playing = True
         while self.playing:
             self.dt = self.clock.tick(fps) / 1000.0
-            #self.clock.tick(fps)
+
             self.events()
             self.update()
             self.draw()
 
     def events(self):
         for event in pg.event.get():
-            # print(event)
             if event.type == pg.QUIT:
                 if self.playing:
                     self.playing = False
@@ -171,42 +156,35 @@ class Game:
                     self.player.jump()
                     self.player.double_jump()
 
+            # TODO:
+            # Shooting
             if event.type == pg.MOUSEBUTTONDOWN:
-                #print("Mouse down!")
-                now = pg.time.get_ticks()
-                if now - self.player.last_shot > bullet_rate:
-                    pass
+                pass
 
-        # self.lowest keeps track of the lowest platform
-        for plat in self.platforms_group:
-            if plat.rect.bottom > self.lowest:
-                self.lowest = plat.rect.bottom
-
-
+    # Update
     def update(self):
-            # Keep updating sprites before drawing, see self.draw()
             self.all_sprites_group.update()
 
-            if self.player.velocity.y > 0:
-                # TODO:
-                # Optimize collision checking to only check on screen sprites
-                # https://youtu.be/OmlQ0XCvIn0?list=PLsk-HSGFjnaH5yghzu7PcOzm9NhsW0Urw&t=339
-                # If player hits a platform - only if falling
-                hits = pg.sprite.spritecollide(self.player, self.platforms_group, False)
-                if hits:
-                    self.player.position.y = hits[0].rect.top
-                    self.player.velocity.y = 0
+            # if self.player.velocity.y > 0:
+            #     # TODO:
+            #     # Optimize collision checking to only check on screen sprites
+            #     # https://youtu.be/OmlQ0XCvIn0?list=PLsk-HSGFjnaH5yghzu7PcOzm9NhsW0Urw&t=339
+            #     # If player hits a platform - only if falling
+            #     hits = pg.sprite.spritecollide(self.player, self.platforms_group, False)
+            #     if hits:
+            #         self.player.position.y = hits[0].rect.top
+            #         self.player.velocity.y = 0
 
             # TODO:
             # Improve so that when screen scrolls, mobs stay put
 
-            # So mobs don't fall through floor
-            for m in self.mobs_group:
-                if m.velocity.y > 0:
-                    hits = pg.sprite.spritecollide(m, self.platforms_group, False)
-                    if hits:
-                        m.position.y = hits[0].rect.top
-                        m.velocity.y = 0
+            # # So mobs don't fall through floor
+            # for m in self.mobs_group:
+            #     if m.velocity.y > 0:
+            #         hits = pg.sprite.spritecollide(m, self.platforms_group, False)
+            #         if hits:
+            #             m.position.y = hits[0].rect.top
+            #             m.velocity.y = 0
 
             # Enemy damage to the player if they collide
             for m in self.mobs_group:
@@ -216,38 +194,24 @@ class Game:
                     if defense_check > 0:
                         self.player.cur_hp -= self.player.defense - m.attack_damage
 
-            # TODO:
-            # Walls should probably go here
-            # if self.player.rect.right >= screen_width:
-            #     self.player.rect.right = screen_width
-            # if self.player.rect.left <= 0:
-            #     self.player.rect.left = 0
-            # if self.player.rect.x > screen_width or self.player.rect.x < 0:
-            #     self.player.allow_move = False
-            #     print(self.player.allow_move)
+            # # Scroll up
+            # if self.player.rect.top <= screen_height / 8:
+            #     self.player.position.y += abs(self.player.velocity.y)
+            #     for mob in self.mobs_group:
+            #         mob.rect.y -= abs(self.player.velocity.y)
 
-            # if self.player.rect.y > screen_height:
-            #     self.player.allow_move = False
-            #     print(self.player.allow_move)
+            #     for plat in self.platforms_group:
+            #         plat.rect.y += abs(self.player.velocity.y)
 
-            # Scroll up
-            if self.player.rect.top <= screen_height / 8:
-                self.player.position.y += abs(self.player.velocity.y)
-                for mob in self.mobs_group:
-                    mob.rect.y -= abs(self.player.velocity.y)
+            # # Scroll down, but not past 1/16 of the screen
+            # # so that bottom platforms still look nice
+            # if self.player.rect.bottom >= screen_height - screen_height / 26:
+            #     self.player.position.y -= abs(self.player.velocity.y)
+            #     for mob in self.mobs_group:
+            #         mob.rect.y -= abs(self.player.velocity.y)
 
-                for plat in self.platforms_group:
-                    plat.rect.y += abs(self.player.velocity.y)
-
-            # Scroll down, but not past 1/16 of the screen
-            # so that bottom platforms still look nice
-            if self.player.rect.bottom >= screen_height - screen_height / 26:
-                self.player.position.y -= abs(self.player.velocity.y)
-                for mob in self.mobs_group:
-                    mob.rect.y -= abs(self.player.velocity.y)
-
-                for plat in self.platforms_group:
-                    plat.rect.y -= abs(self.player.velocity.y)
+            #     for plat in self.platforms_group:
+            #         plat.rect.y -= abs(self.player.velocity.y)
 
 
             # Death condition
@@ -260,10 +224,11 @@ class Game:
 
                 self.playing = False
 
+            # Time survived
             if self.player.lives > 0:
                 self.alive_time = pg.time.get_ticks() - self.start_time
 
-            #now = pg.time.get_ticks()
+            # Keep respawning mobs when they die
             if len(self.mobs_group) < int(self.player.level * difficulty):
                 now = pg.time.get_ticks()
                 if now - self.last_spawn > mob_spawn_rate:
@@ -275,6 +240,7 @@ class Game:
                         self.mobs_group.add(m)
                         self.all_sprites_group.add(m)
 
+    # Text drawing functions
     def draw_text(self, text, x, y, align="left", size=18, color=white):
         # self.font_name = pg.font.Font(os.path.join(font_dir,
         #                                            "pixelated-font.ttf"), 16)
@@ -290,27 +256,10 @@ class Game:
             text_rect.right = x
             text_rect.y = y
 
-        # TODO:
-        # Implement something like this
-        # if align == "left":
-        #     text_rect.left, text_rect.y = x, y
-
-        # elif align == "right":
-        #     text_rect.right, text_rect.y = x, y
-
-        # elif align == "center":
-        #     text_rect.center, text_rect.y = x, y
-
-        # elif align == "midtop":
-        #     text_rect.midtop, text_rect.y = x, y
-
-        # elif align == "midbottom":
-        #     text_rect.midbottom, text_rect.y = x, y
-
         self.screen.blit(text_surface, text_rect)
 
     def draw(self):
-        self.screen.fill(bg_color) # Left in in case background image is not blit
+        self.screen.fill(bg_color) # In case background image not blit
         self.fill_background()
         self.all_sprites_group.draw(self.screen)
 
@@ -327,6 +276,7 @@ class Game:
 
         pg.display.flip()
 
+    # Pause until key or click
     def wait_for_key(self, mouse_too=False):
         wait = True
         while wait:
@@ -346,16 +296,14 @@ class Game:
                 if mouse_too and event.type == pg.MOUSEBUTTONDOWN:
                     wait = False
 
-    # RGB Logo
-    def load_logo(self):
-        #self.which_img = 0
 
+    # RGB start screen logo
+    def load_logo(self):
         # Endless loop for indexing over the images
         if self.which_img >= 35:
             self.which_img = -1
         self.which_img += 1
 
-        # print(self.which_img)
         img = logo_list[self.which_img]
         img_rect = img.get_rect()
         img_rect.center = (self.img_pos)
@@ -366,8 +314,6 @@ class Game:
 
         self.which_img = -1
         self.img_pos = (screen_width/2, 180)
-
-        # self.draw_text(title, screen_width/2, screen_height / 4, align="center", size=40)
 
         self.draw_text("Highscore:",
                        screen_width/2,
@@ -398,10 +344,6 @@ class Game:
         pg.display.flip()
         self.wait_for_key(mouse_too=True)
 
-    def game_over_screen(self):
-        if not self.running:
-            return
-
     def fill_background(self):
         # Background
         self.screen.fill(bg_color) # Just in case
@@ -416,6 +358,8 @@ g.start_screen()
 
 while g.running:
     g.new()
-    # g.game_over_screen()
+
+    # TODO:
+    # Game over
 
 pg.quit()

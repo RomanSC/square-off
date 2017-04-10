@@ -9,6 +9,8 @@ from constants import *
 vec = pg.math.Vector2
 pg.HWSURFACE
 
+# PlayerPlayerPlayer
+
 class Player(pg.sprite.Sprite):
     def __init__(self, game):
         pg._layer = player_layer
@@ -18,7 +20,7 @@ class Player(pg.sprite.Sprite):
         self.image.fill(blue)
         self.rect = self.image.get_rect()
 
-        # Center the player
+        # Center the player on the screen
         self.rect.center = (screen_width/2, screen_height/2)
 
         self.position = (screen_width/2, screen_height/2)
@@ -28,16 +30,12 @@ class Player(pg.sprite.Sprite):
         self.last_double_jump = 0
         self.jump_delay = 250
         # self.jumps = 2
-        self.allow_move = True
         self.floor_solid = True
         self.allow_jump = False
+        self.colliding_x = False
+        self.colliding_y = False
         # print(dir(self.position))
         # print(dir(self.rect.center))
-
-        # Last time shot bullet
-        self.last_shot = 0
-        self.rotation = 0
-        self.shoot_position = (self.position[0] - 30, self.position[1])
 
         # Health and health bar
         self.max_hp = 100 # Players max hp
@@ -54,6 +52,10 @@ class Player(pg.sprite.Sprite):
         # related  to kills in self.update()
         self.kills = 0
 
+        # Center the player on the screen
+        self.rect.center = (screen_width/2, screen_height/2)
+
+
     # TODO:
     # Player names
     def __str__(self):
@@ -61,7 +63,10 @@ class Player(pg.sprite.Sprite):
 
     def update(self):
         # self.volacity_x, self.volacity_y = 0, 0
-        self.acceleration = vec(0, player_gravity)
+
+        # Gravity
+        if not self.colliding_y:
+            self.acceleration = vec(0, player_gravity)
 
         self.defense = random.choice([0,0.5,1,1.5,2,2.5,3])
 
@@ -74,15 +79,7 @@ class Player(pg.sprite.Sprite):
         self.velocity += self.acceleration
         self.position += self.velocity + player_acc * self.acceleration
 
-        self.shoot_position = (self.position.x - 15, self.position.y)
-
         self.rect.midbottom = self.position
-
-        if self.rect.right >= screen_width:
-            self.rect.left = 20
-
-        if self.rect.left <= 0:
-            self.rect.right = screen_width - 20
 
         if self.rect.y > screen_height:
             self.center()
@@ -99,35 +96,29 @@ class Player(pg.sprite.Sprite):
         if keystate[pg.K_RIGHT] or keystate[pg.K_d]:
             self.move_right()
 
-        # TODO
-        # Convert to some other control
-        # if keystate[pg.K_UP] or keystate[pg.K_w] and self.allow_move:
-        #     self.move_up()
+        if keystate[pg.K_UP] or keystate[pg.K_w]:
+            self.move_up()
 
         # TODO
         # Make fall through floors
         # if keystate[pg.K_DOWN] or keystate[pg.K_s] and self.allow_move:
-        #      self.floor_solid = False
+        #     self.floor_solid = False
         #     self.move_down()
 
-        # if keystate[pg.K_t]:
-        #     self.center()
+        if keystate[pg.K_t]:
+            self.center()
 
     def move_left(self):
-        if self.allow_move:
-            self.acceleration.x -= player_acc
+        self.acceleration.x -= player_acc
 
     def move_right(self):
-        if self.allow_move:
-            self.acceleration.x += player_acc
+        self.acceleration.x += player_acc
 
     def move_up(self):
-        if self.allow_move:
-            self.acceleration.y -= player_acc
+        self.acceleration.y -= player_acc
 
     def move_down(self):
-        if self.allow_move:
-            self.acceleration.y += player_acc
+        self.acceleration.y += player_acc
 
     def jump(self):
         self.rect.x += 1
@@ -159,7 +150,8 @@ class Mob(pg.sprite.Sprite):
         self.image = pg.Surface((40, 40))
         self.image.fill(random.choice(mob_colors))
         # self.image = random.choice(mob_texture_list)
-        self.face = pg.transform.scale(random.choice(mob_texture_list), (30, 30))
+        self.face = pg.transform.scale(random.choice(mob_texture_list),
+                                      (30, 30))
         #self.face = random.choice(mob_texture_list)
         self.face.convert()
         self.rect = self.image.get_rect()
@@ -206,11 +198,17 @@ class Mob(pg.sprite.Sprite):
             self.game.player.level += xp_rate
 
         # Lost health if shot
-        # hits = pg.sprite.spritecollide(self, self.game.bullets_group, True, False)
+        # hits = pg.sprite.spritecollide(self,
+        #                                self.game.bullets_group,
+        #                                True,
+        #                                False)
         # if hits:
         #     self.health -= bullet_damage
 
-        # hits = pg.sprite.spritecollide(self, self.game.player_group, False, False)
+        # hits = pg.sprite.spritecollide(self,
+        #                                self.game.player_group,
+        #                                False,
+        #                                False)
         # if hits:
         #     self.kill()
 
@@ -261,7 +259,9 @@ class Mob(pg.sprite.Sprite):
 
     def jump(self):
         self.rect.x += 1
-        hits = pg.sprite.spritecollide(self, self.game.platforms_group, False)
+        hits = pg.sprite.spritecollide(self,
+                                       self.game.platforms_group,
+                                       False)
         self.rect.x -= 1
         if hits:
             now = pg.time.get_ticks()
@@ -282,11 +282,14 @@ class Mob(pg.sprite.Sprite):
                 self.jump()
                 last_pdu = pdu
 
-    def back_forth(self):
-        now = pg.time.get_ticks()
+    # TODO:
+    # def back_forth(self):
+    #     now = pg.time.get_ticks()
+
+# PlatformPlatformPlatform
 
 class Platform(pg.sprite.Sprite):
-    def __init__(self, x, y, w, h):
+    def __init__(self, game, x, y, w, h):
         pg._layer = platform_layer
         pg.sprite.Sprite.__init__(self)
         self.image = pg.Surface((w, h))
@@ -294,6 +297,7 @@ class Platform(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+        self.game = game
 
 # TODO:
 # Bullets (maybe)
