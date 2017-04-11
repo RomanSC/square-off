@@ -158,22 +158,25 @@ class Game:
 
             # TODO:
             # Shooting
-            if event.type == pg.MOUSEBUTTONDOWN:
-                pass
-
+            # if event.type == pg.MOUSEBUTTONDOWN:
+        if pg.mouse.get_pressed()[0] == 1:
+            b = Bullet(self)
+            self.bullets_group.add(b)
+            self.all_sprites_group.add(b)
+            return
     # Update
     def update(self):
             self.all_sprites_group.update()
 
-            # if self.player.velocity.y > 0:
-            #     # TODO:
-            #     # Optimize collision checking to only check on screen sprites
-            #     # https://youtu.be/OmlQ0XCvIn0?list=PLsk-HSGFjnaH5yghzu7PcOzm9NhsW0Urw&t=339
-            #     # If player hits a platform - only if falling
-            #     hits = pg.sprite.spritecollide(self.player, self.platforms_group, False)
-            #     if hits:
-            #         self.player.position.y = hits[0].rect.top
-            #         self.player.velocity.y = 0
+            if self.player.velocity.y > 0:
+                # TODO:
+                # Optimize collision checking to only check on screen sprites
+                # https://youtu.be/OmlQ0XCvIn0?list=PLsk-HSGFjnaH5yghzu7PcOzm9NhsW0Urw&t=339
+                # If player hits a platform - only if falling
+                hits = pg.sprite.spritecollide(self.player, self.platforms_group, False)
+                if hits:
+                    self.player.position.y = hits[0].rect.top
+                    self.player.velocity.y = 0
 
             # TODO:
             # Improve so that when screen scrolls, mobs stay put

@@ -52,12 +52,13 @@ spawn_locations = [(-105, 600), (-245, 600), (-226, 600), (-36, 600), (-13, 600)
 
 # Bullet physics and properties
 bullet_damage = 20
-bullet_speed = 500
+bullet_speed = 10
 bullet_lifetime = 750 # ms or 0.5 seconds
 bullet_rate = 150
 bullet_origin_offset = vec(20, 0)
 kickback = 1
 spread = 10
+bullet_gravity = 0.8
 
 # Vectors
 vec = pg.math.Vector2

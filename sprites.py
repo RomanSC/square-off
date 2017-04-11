@@ -65,8 +65,7 @@ class Player(pg.sprite.Sprite):
         # self.volacity_x, self.volacity_y = 0, 0
 
         # Gravity
-        if not self.colliding_y:
-            self.acceleration = vec(0, player_gravity)
+        self.acceleration = vec(0, player_gravity)
 
         self.defense = random.choice([0,0.5,1,1.5,2,2.5,3])
 
@@ -300,8 +299,53 @@ class Platform(pg.sprite.Sprite):
         self.game = game
 
 # TODO:
-# Bullets (maybe)
+class Bullet(pg.sprite.Sprite):
+    def __init__(self, game):
+        self.game = game
+        pg._layer = bullet_layer
+        pg.sprite.Sprite.__init__(self)
+        self.image = pg.Surface((2, 1))
+        self.image.fill(yellow)
+        self.rect = self.image.get_rect()
 
-# class Bullet(pg.sprite.Sprite):
-#     def __init__(self):
-#         pass
+        # For range
+        self.lifetime = pg.time.get_ticks()
+
+        # Get mouse position
+        self.target = vec(pg.mouse.get_pos())
+
+        # Start at player
+        self.position = vec(self.game.player.position)
+        self.position.y -= 20
+
+        # Distance
+        self.distance = self.target.x - self.position.x
+
+        self.time = 1
+
+    def update(self):
+        self.time += 1
+
+        # print(self.position)
+
+        if self.target.x > screen_width/2:
+            self.position.x += 1 * bullet_speed
+            self.position.y -= 1
+
+        elif self.target.x < screen_width/2:
+            self.position.x -= 1 * bullet_speed
+            self.position.y -= 1
+
+        if self.target.x > screen_width/2:
+            self.position.x += 1 * bullet_speed
+            self.position.y -= 1
+
+        elif self.target.x < screen_width/2:
+            self.position.x -= 1 * bullet_speed
+            self.position.y -= 1
+
+        # if self.target.y > self.position y:
+        self.rect.x = self.position.x
+        # self.rect.y = self.position.y / self.time
+        self.rect.y = self.position.y
+
