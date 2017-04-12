@@ -325,24 +325,24 @@ class Bullet(pg.sprite.Sprite):
 
     def update(self):
         self.time += 1
+        x_distance = self.position.x - self.game.player.position.x
+        y_distance = self.position.y - self.game.player.position.y
 
         # print(self.position)
 
         if self.target.x > screen_width/2:
             self.position.x += 1 * bullet_speed
-            self.position.y -= 1
 
-        elif self.target.x < screen_width/2:
-            self.position.x -= 1 * bullet_speed
-            self.position.y -= 1
+        if self.target.y < screen_height/2:
+                self.position.y += -1 * bullet_speed
 
-        if self.target.x > screen_width/2:
-            self.position.x += 1 * bullet_speed
-            self.position.y -= 1
+        # if self.target.x < screen_width/2:
+        #     if self.position.x < x_distance:
+        #         self.position.x += -1 * bullet_speed
 
-        elif self.target.x < screen_width/2:
-            self.position.x -= 1 * bullet_speed
-            self.position.y -= 1
+        # if self.target.y < screen_height/2:
+        #     if self.position.y < y_distance:
+        #         self.position.y += -1 * bullet_speed
 
         # if self.target.y > self.position y:
         self.rect.x = self.position.x
