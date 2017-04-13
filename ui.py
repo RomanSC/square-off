@@ -32,7 +32,7 @@ class HP_bar(pg.sprite.Sprite):
         # Fix me, adjust so that health bar is always
         # length 0-100 even if player health is over 100
         if self.game.player.cur_hp > 0:
-            self.width = self.game.player.cur_hp
+            self.width = self.game.player.cur_hp * 2
 
         if self.game.player.cur_hp >= self.high and self.game.player.cur_hp > self.mid:
             self.bar_color = green

@@ -181,13 +181,13 @@ class Game:
             # TODO:
             # Improve so that when screen scrolls, mobs stay put
 
-            # # So mobs don't fall through floor
-            # for m in self.mobs_group:
-            #     if m.velocity.y > 0:
-            #         hits = pg.sprite.spritecollide(m, self.platforms_group, False)
-            #         if hits:
-            #             m.position.y = hits[0].rect.top
-            #             m.velocity.y = 0
+            # So mobs don't fall through floor
+            for m in self.mobs_group:
+                if m.velocity.y > 0:
+                    hits = pg.sprite.spritecollide(m, self.platforms_group, False)
+                    if hits:
+                        m.position.y = hits[0].rect.top
+                        m.velocity.y = 0
 
             # Enemy damage to the player if they collide
             for m in self.mobs_group:

@@ -197,12 +197,12 @@ class Mob(pg.sprite.Sprite):
             self.game.player.level += xp_rate
 
         # Lost health if shot
-        # hits = pg.sprite.spritecollide(self,
-        #                                self.game.bullets_group,
-        #                                True,
-        #                                False)
-        # if hits:
-        #     self.health -= bullet_damage
+        hits = pg.sprite.spritecollide(self,
+                                       self.game.bullets_group,
+                                       True,
+                                       False)
+        if hits:
+            self.health -= bullet_damage * self.game.player.level
 
         # hits = pg.sprite.spritecollide(self,
         #                                self.game.player_group,
@@ -304,8 +304,8 @@ class Bullet(pg.sprite.Sprite):
         self.game = game
         pg._layer = bullet_layer
         pg.sprite.Sprite.__init__(self)
-        self.image = pg.Surface((2, 1))
-        self.image.fill(yellow)
+        self.image = pg.Surface((2, 2))
+        self.image.fill(random.choice(colors))
         self.rect = self.image.get_rect()
 
         # For range
@@ -316,32 +316,55 @@ class Bullet(pg.sprite.Sprite):
 
         # Start at player
         self.position = vec(self.game.player.position)
+        self.start_pos = vec(self.game.player.position)
         self.position.y -= 20
 
         # Distance
         self.distance = self.target.x - self.position.x
 
-        self.time = 1
+        self.start_life = pg.time.get_ticks()
+
+        self.opp = self.target.y - self.position.y
+        self.adj = self.target.x - self.position.x
+        # print("Opposite: ", self.opp)
+        # print("Adjacent: ", self.adj)
+
+        # Stupid hack to prevent zero division
+        # exception
+        # self.opp += random.choice([0.1, -0.1])
+        # self.adj += random.choice([0.1, -0.1])
+
+        try:
+            self.rat = self.opp/self.adj
+            # print("Ratio: ", self.rat)
+        except ZeroDivisionError:
+            self.rat = 1
+            # print("Ratio: ", self.rat)
+
+        self.gy = self.rat * bullet_speed
+        self.gx = 1 * bullet_speed
 
     def update(self):
-        self.time += 1
-        x_distance = self.position.x - self.game.player.position.x
-        y_distance = self.position.y - self.game.player.position.y
-
         # print(self.position)
+        bullet_lifetime = 10000
 
-        if self.target.x > screen_width/2:
-            self.position.x += 1 * bullet_speed
+        if self.start_pos.x < self.target.x:
+            self.position.y += self.gy
+            self.position.x += self.gx
 
-        if self.target.y < screen_height/2:
-                self.position.y += -1 * bullet_speed
+        if self.start_pos.x > self.target.x:
+            self.position.y -= self.gy
+            self.position.x -= self.gx
 
-        # if self.target.x < screen_width/2:
-        #     if self.position.x < x_distance:
-        #         self.position.x += -1 * bullet_speed
+        now = pg.time.get_ticks()
+
+        if now - self.start_life > bullet_lifetime:
+            self.kill()
+
+        # if self.target.x > screen_width/2:
+        #     self.position.x += 1 * bullet_speed
 
         # if self.target.y < screen_height/2:
-        #     if self.position.y < y_distance:
         #         self.position.y += -1 * bullet_speed
 
         # if self.target.y > self.position y:
