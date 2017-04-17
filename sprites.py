@@ -26,13 +26,12 @@ class Player(pg.sprite.Sprite):
         self.velocity = vec(0, 0)
         self.acceleration = vec(0, 0)
         self.last_jump = 0
+        self.last_floor = 0
         self.last_double_jump = 0
-        self.jump_delay = 250
-        # self.jumps = 2
+        self.jump_delay = 400
         self.floor_solid = True
         self.allow_jump = False
-        self.colliding_x = False
-        self.colliding_y = False
+
         # print(dir(self.position))
         # print(dir(self.rect.center))
 
@@ -53,6 +52,9 @@ class Player(pg.sprite.Sprite):
 
         # Center the player on the screen
         self.rect.center = (screen_width/2, screen_height/2)
+
+        # Shooting
+        self.last_shot = 0
 
 
     # TODO:
@@ -103,8 +105,20 @@ class Player(pg.sprite.Sprite):
         #     self.floor_solid = False
         #     self.move_down()
 
+        if keystate[pg.K_SPACE]:
+            self.jump()
+            self.double_jump()
+
         if keystate[pg.K_t]:
             self.center()
+
+        if pg.mouse.get_pressed()[0] == 1:
+            now = pg.time.get_ticks()
+            if now - self.last_shot > bullet_rate:
+                b = Bullet(self.game)
+                self.game.bullets_group.add(b)
+                self.game.all_sprites_group.add(b)
+                self.last_shot = now
 
     def move_left(self):
         self.acceleration.x -= player_acc
@@ -120,21 +134,32 @@ class Player(pg.sprite.Sprite):
 
     def jump(self):
         self.rect.x += 1
-        hits = pg.sprite.spritecollide(self, self.game.platforms_group, False)
+        hits = pg.sprite.spritecollide(self,
+                                       self.game.\
+                                       platforms_group,
+                                       False)
         self.rect.x -= 1
+
         if hits:
-            self.velocity.y += -20
-            self.last_jump = pg.time.get_ticks()
-            # self.jumps = 2
-            self.allow_jump = True
+            now = pg.time.get_ticks()
+            self.last_floor = now
+            if now - self.last_jump > self.jump_delay:
+                if now - self.last_double_jump > 50:
+                    self.velocity.y += -22
+                    self.last_jump = pg.time.get_ticks()
+                    self.allow_jump = True
 
     def double_jump(self):
         # TODO:
         # Skill based maximum double jumps
         now = pg.time.get_ticks()
-        if now - self.last_jump > self.jump_delay and self.allow_jump:
-            self.velocity.y += -15
+
+        if now - self.last_jump > self.jump_delay \
+        and self.allow_jump:
+
+            self.velocity.y += -23
             self.allow_jump = False
+
         self.last_double_jump = now
 
     def center(self):
@@ -303,8 +328,8 @@ class Bullet(pg.sprite.Sprite):
         self.game = game
         pg._layer = bullet_layer
         pg.sprite.Sprite.__init__(self)
-        self.image = pg.Surface((2, 2))
-        self.image.fill(random.choice(colors))
+        self.image = pg.Surface((3, 3))
+        self.image.fill(bullet_color)
         self.rect = self.image.get_rect()
 
         # For range
@@ -323,20 +348,21 @@ class Bullet(pg.sprite.Sprite):
 
         self.start_life = pg.time.get_ticks()
 
-        self.opp = self.target.y - self.position.y
-        self.adj = self.target.x - self.position.x
-        # print("Opposite: ", self.opp)
-        # print("Adjacent: ", self.adj)
+        # x and y distance, also the opposite and adjacent
+        # Ratio of x and y distance is also the tangent or
+        # angle
+        self.dy = self.target.y - self.position.y
+        self.dx = self.target.x - self.position.x
 
-        # self.plusx, self.plusy = reduce(self.adj, self.opp)
-        # print(self.plusx, self.plusy)
+        # Normalize vector
+        # https://encrypted.google.com/search?hl=en&q=normalizing%20vectors
+        self.nize = math.sqrt(self.dx ** 2 + self.dy ** 2)
 
     def update(self):
-        self.position.y += (self.opp / 100) * bullet_speed
-        self.position.x += (self.adj / 100) * bullet_speed
-
-        # self.position.y += self.plusy
-        # self.position.x += self.plusx
+        self.position.y += (self.dy / self.nize) * \
+                            bullet_speed
+        self.position.x += (self.dx / self.nize ) * \
+                            bullet_speed
 
         now = pg.time.get_ticks()
         if now - self.start_life > bullet_lifetime:
@@ -344,27 +370,3 @@ class Bullet(pg.sprite.Sprite):
 
         self.rect.x = self.position.x
         self.rect.y = self.position.y
-
-# The following two functions are for creating
-# reduced values for ratios
-# def gcd(x, y):
-#     while y != 0:
-#         (x, y) = (y, x % y)
-#     return x
-
-# def reduce(xd, yd):
-#     com_denom = gcd(xd, yd)
-
-#     if xd < 0:
-#         xd = -math.fabs(xd / com_denom)
-
-#     elif xd > 0:
-#         xd = math.fabs(xd / com_denom)
-
-#     if yd < 0:
-#         yd = -math.fabs(yd / com_denom)
-
-#     elif yd > 0:
-#         yd = math.fabs(yd / com_denom)
-
-#     return xd, yd

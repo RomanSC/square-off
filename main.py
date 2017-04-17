@@ -133,6 +133,9 @@ class Game:
 
         self.start_time = pg.time.get_ticks()
 
+        # Last time player shot
+        self.last_shot = 0
+
         # Run the game
         self.run()
 
@@ -153,19 +156,6 @@ class Game:
                     self.playing = False
                 self.running = False
 
-            if event.type == pg.KEYDOWN:
-                if event.key == pg.K_SPACE:
-                    self.player.jump()
-                    self.player.double_jump()
-
-            # TODO:
-            # Shooting
-            # if event.type == pg.MOUSEBUTTONDOWN:
-        if pg.mouse.get_pressed()[0] == 1:
-            b = Bullet(self)
-            self.bullets_group.add(b)
-            self.all_sprites_group.add(b)
-            return
     # Update
     def update(self):
             self.all_sprites_group.update()
