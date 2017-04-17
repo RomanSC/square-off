@@ -52,8 +52,8 @@ spawn_locations = [(920, 920)]
 
 # Bullet physics and properties
 bullet_damage = 20
-bullet_speed = 8
-bullet_lifetime = 300 # ms or 0.3 seconds
+bullet_speed = 2
+bullet_lifetime = 1500 # in ms, or thousands of a second
 bullet_rate = 150
 bullet_origin_offset = vec(20, 0)
 kickback = 1

@@ -1,17 +1,14 @@
-
 #!/usr/bin/python3
 """ sprites.py | Thu, Apr 05, 2017 | Roman S. Collins
 """
 import pygame as pg
 import random, os
-import math
 
 from constants import *
 
 vec = pg.math.Vector2
-pg.HWSURFACE
 
-# PlayerPlayerPlayer
+import math
 
 class Player(pg.sprite.Sprite):
     def __init__(self, game):
@@ -331,26 +328,45 @@ class Bullet(pg.sprite.Sprite):
         # print("Opposite: ", self.opp)
         # print("Adjacent: ", self.adj)
 
-    def update(self):
-        # print(self.position)
-        bullet_lifetime = 10000
+        # self.plusx, self.plusy = reduce(self.adj, self.opp)
+        # print(self.plusx, self.plusy)
 
+    def update(self):
         self.position.y += (self.opp / 100) * bullet_speed
         self.position.x += (self.adj / 100) * bullet_speed
 
-        now = pg.time.get_ticks()
+        # self.position.y += self.plusy
+        # self.position.x += self.plusx
 
+        now = pg.time.get_ticks()
         if now - self.start_life > bullet_lifetime:
             self.kill()
 
-        # if self.target.x > screen_width/2:
-        #     self.position.x += 1 * bullet_speed
+        print(now - self.start_life)
 
-        # if self.target.y < screen_height/2:
-        #         self.position.y += -1 * bullet_speed
-
-        # if self.target.y > self.position y:
         self.rect.x = self.position.x
-        # self.rect.y = self.position.y / self.time
         self.rect.y = self.position.y
 
+# The following two functions are for creating
+# reduced values for ratios
+# def gcd(x, y):
+#     while y != 0:
+#         (x, y) = (y, x % y)
+#     return x
+
+# def reduce(xd, yd):
+#     com_denom = gcd(xd, yd)
+
+#     if xd < 0:
+#         xd = -math.fabs(xd / com_denom)
+
+#     elif xd > 0:
+#         xd = math.fabs(xd / com_denom)
+
+#     if yd < 0:
+#         yd = -math.fabs(yd / com_denom)
+
+#     elif yd > 0:
+#         yd = math.fabs(yd / com_denom)
+
+#     return xd, yd

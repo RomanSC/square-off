@@ -12,6 +12,8 @@ from ui import *
 
 vec = pg.math.Vector2
 
+import math
+
 class Game:
     def __init__(self):
         pg.init()
