@@ -28,7 +28,7 @@ class Player(pg.sprite.Sprite):
         self.last_jump = 0
         self.last_floor = 0
         self.last_double_jump = 0
-        self.jump_delay = 400
+        self.jump_delay = 250
         self.floor_solid = True
         self.allow_jump = False
 
@@ -106,6 +106,7 @@ class Player(pg.sprite.Sprite):
         #     self.move_down()
 
         if keystate[pg.K_SPACE]:
+        #if pg.key.get_pressed()[32] == 1:
             self.jump()
             self.double_jump()
 
@@ -145,7 +146,7 @@ class Player(pg.sprite.Sprite):
             self.last_floor = now
             if now - self.last_jump > self.jump_delay:
                 if now - self.last_double_jump > 50:
-                    self.velocity.y += -22
+                    self.velocity.y += -18
                     self.last_jump = pg.time.get_ticks()
                     self.allow_jump = True
 
@@ -157,7 +158,7 @@ class Player(pg.sprite.Sprite):
         if now - self.last_jump > self.jump_delay \
         and self.allow_jump:
 
-            self.velocity.y += -23
+            self.velocity.y += -20
             self.allow_jump = False
 
         self.last_double_jump = now
