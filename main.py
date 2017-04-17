@@ -93,7 +93,7 @@ class Game:
         # Sprite groups
         self.all_sprites_group = pg.sprite.LayeredUpdates()
         self.player_group = pg.sprite.Group()
-        self.mobs_group = pg.sprite.Group()
+        # self.mobs_group = pg.sprite.Group()
         self.platforms_group = pg.sprite.Group()
         self.floor_group = pg.sprite.Group()
         self.ui_group = pg.sprite.Group()
@@ -118,12 +118,12 @@ class Game:
 
 
         # Mobs
-        for m in range(int(self.player.level * difficulty)):
-            self.last_spawn = pg.time.get_ticks()
-            spawn_pos = random.choice(spawn_locations)
-            m = Mob(self, spawn_pos)
-            self.mobs_group.add(m)
-            self.all_sprites_group.add(m)
+        # for m in range(int(self.player.level * difficulty)):
+        #     self.last_spawn = pg.time.get_ticks()
+        #     spawn_pos = random.choice(spawn_locations)
+        #     m = Mob(self, spawn_pos)
+        #     self.mobs_group.add(m)
+        #     self.all_sprites_group.add(m)
 
         hp_bar = HP_bar(game)
         self.ui_group.add(hp_bar)
@@ -182,20 +182,20 @@ class Game:
             # Improve so that when screen scrolls, mobs stay put
 
             # So mobs don't fall through floor
-            for m in self.mobs_group:
-                if m.velocity.y > 0:
-                    hits = pg.sprite.spritecollide(m, self.platforms_group, False)
-                    if hits:
-                        m.position.y = hits[0].rect.top
-                        m.velocity.y = 0
+            # for m in self.mobs_group:
+            #     if m.velocity.y > 0:
+            #         hits = pg.sprite.spritecollide(m, self.platforms_group, False)
+            #         if hits:
+            #             m.position.y = hits[0].rect.top
+            #             m.velocity.y = 0
 
-            # Enemy damage to the player if they collide
-            for m in self.mobs_group:
-                hits = pg.sprite.spritecollide(self.player, self.mobs_group, False)
-                if hits:
-                    defense_check = self.player.defense - m.attack_damage # Nice
-                    if defense_check > 0:
-                        self.player.cur_hp -= self.player.defense - m.attack_damage
+            # # Enemy damage to the player if they collide
+            # for m in self.mobs_group:
+            #     hits = pg.sprite.spritecollide(self.player, self.mobs_group, False)
+            #     if hits:
+            #         defense_check = self.player.defense - m.attack_damage # Nice
+            #         if defense_check > 0:
+            #             self.player.cur_hp -= self.player.defense - m.attack_damage
 
             # # Scroll up
             # if self.player.rect.top <= screen_height / 8:
@@ -232,16 +232,16 @@ class Game:
                 self.alive_time = pg.time.get_ticks() - self.start_time
 
             # Keep respawning mobs when they die
-            if len(self.mobs_group) < int(self.player.level * difficulty):
-                now = pg.time.get_ticks()
-                if now - self.last_spawn > mob_spawn_rate:
-                    for m in range(int(self.player.level * difficulty)):
-                        self.last_spawn = now
-                        # x_location = random.randrange(0, screen_width)
-                        spawn_pos = random.choice(spawn_locations)
-                        m = Mob(self, spawn_pos)
-                        self.mobs_group.add(m)
-                        self.all_sprites_group.add(m)
+            # if len(self.mobs_group) < int(self.player.level * difficulty):
+            #     now = pg.time.get_ticks()
+            #     if now - self.last_spawn > mob_spawn_rate:
+            #         for m in range(int(self.player.level * difficulty)):
+            #             self.last_spawn = now
+            #             # x_location = random.randrange(0, screen_width)
+            #             spawn_pos = random.choice(spawn_locations)
+            #             m = Mob(self, spawn_pos)
+            #             self.mobs_group.add(m)
+            #             self.all_sprites_group.add(m)
 
     # Text drawing functions
     def draw_text(self, text, x, y, align="left", size=18, color=white):

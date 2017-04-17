@@ -1,8 +1,10 @@
+
 #!/usr/bin/python3
 """ sprites.py | Thu, Apr 05, 2017 | Roman S. Collins
 """
 import pygame as pg
 import random, os
+import math
 
 from constants import *
 
@@ -329,32 +331,12 @@ class Bullet(pg.sprite.Sprite):
         # print("Opposite: ", self.opp)
         # print("Adjacent: ", self.adj)
 
-        # Stupid hack to prevent zero division
-        # exception
-        # self.opp += random.choice([0.1, -0.1])
-        # self.adj += random.choice([0.1, -0.1])
-
-        try:
-            self.rat = self.opp/self.adj
-            # print("Ratio: ", self.rat)
-        except ZeroDivisionError:
-            self.rat = 1
-            # print("Ratio: ", self.rat)
-
-        self.gy = self.rat * bullet_speed
-        self.gx = 1 * bullet_speed
-
     def update(self):
         # print(self.position)
         bullet_lifetime = 10000
 
-        if self.start_pos.x < self.target.x:
-            self.position.y += self.gy
-            self.position.x += self.gx
-
-        if self.start_pos.x > self.target.x:
-            self.position.y -= self.gy
-            self.position.x -= self.gx
+        self.position.y += (self.opp / 100) * bullet_speed
+        self.position.x += (self.adj / 100) * bullet_speed
 
         now = pg.time.get_ticks()
 
