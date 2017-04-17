@@ -342,8 +342,6 @@ class Bullet(pg.sprite.Sprite):
         if now - self.start_life > bullet_lifetime:
             self.kill()
 
-        print(now - self.start_life)
-
         self.rect.x = self.position.x
         self.rect.y = self.position.y
 
