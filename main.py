@@ -158,6 +158,8 @@ class Game:
 
     # Update
     def update(self):
+            if self.player.cur_hp < 100:
+                self.player.cur_hp += 100
             self.all_sprites_group.update()
 
             if self.player.velocity.y > 0:
@@ -166,6 +168,7 @@ class Game:
                 # https://youtu.be/OmlQ0XCvIn0?list=PLsk-HSGFjnaH5yghzu7PcOzm9NhsW0Urw&t=339
                 # If player hits a platform - only if falling
                 hits = pg.sprite.spritecollide(self.player, self.platforms_group, False)
+
                 if hits:
                     self.player.position.y = hits[0].rect.top
                     self.player.velocity.y = 0
@@ -221,9 +224,12 @@ class Game:
                 self.alive_time = pg.time.get_ticks() - self.start_time
 
             # Keep respawning mobs when they die
+            # print(int(self.player.level) * difficulty)
             if len(self.mobs_group) < int(self.player.level * difficulty):
                 now = pg.time.get_ticks()
                 if now - self.last_spawn > mob_spawn_rate:
+		    # TODO:
+		    # Maximum spawn count
                     for m in range(int(self.player.level * difficulty)):
                         self.last_spawn = now
                         # x_location = random.randrange(0, screen_width)

@@ -57,6 +57,8 @@ class Player(pg.sprite.Sprite):
         self.last_shot = 0
 
 
+
+
     # TODO:
     # Player names
     def __str__(self):
@@ -167,7 +169,7 @@ class Player(pg.sprite.Sprite):
         self.rect.center = (screen_width/2, screen_height/2)
 
 class Mob(pg.sprite.Sprite):
-    def __init__(self, game, position, move_freely=True):
+    def __init__(self, game, position):
         pg._layer = mob_layer
         pg.sprite.Sprite.__init__(self)
         self.game = game
@@ -185,7 +187,6 @@ class Mob(pg.sprite.Sprite):
         self.health = 200
         self.jump_delay = 750
         self.last_jump = 0
-        self.move_freely = move_freely
         # For self.back_forth()
         self.last_back_forth = 0
 
@@ -201,6 +202,21 @@ class Mob(pg.sprite.Sprite):
         self.position = position
         self.velocity = vec(0, 0)
         self.acceleration = vec(0, 0)
+
+        # self.move_options = [True, False]
+        # self.move_freely = random.choice(self.move_options)
+
+        move_choice = random.choice([1, 2, 3, 4, 5, 6, 7, 8])
+        if move_choice <= 3:
+            self.move_freely = False
+        elif move_choice >= 4:
+            self.move_freely = True
+
+        # Back and forth left right distance
+        self.movement_range = random.choice(mobbackforthranges)
+        print(self.movement_range)
+        self.cur_range = 0
+        self.lr = "l"
 
     # TODO:
     # Mob names
@@ -287,28 +303,66 @@ class Mob(pg.sprite.Sprite):
                                        self.game.platforms_group,
                                        False)
         self.rect.x -= 1
+
         if hits:
             now = pg.time.get_ticks()
             if now - self.last_jump > self.jump_delay:
                 self.velocity.y += -20
 
     def free_move(self):
-        distance = self.game.player.rect.x - self.rect.x
-        if distance > 0:
+        dx = self.game.player.rect.x - self.rect.x
+        dy = self.game.player.rect.y - self.rect.y
+
+        if dx > 0:
             self.move_right()
-        elif distance < 0:
+        elif dx < 0:
             self.move_left()
 
-        last_pdu = abs(self.game.player.rect.y - self.rect.y)
-        if self.game.player.rect.y < self.rect.y:
-            pdu = abs(self.game.player.rect.y - self.rect.y)
-            if pdu < last_pdu:
-                self.jump()
-                last_pdu = pdu
+        # last_pdu = abs(self.game.player.rect.y - self.rect.y)
+        # if self.game.player.rect.y < self.rect.y:
+        #     pdu = abs(self.game.player.rect.y - self.rect.y)
+        #     if pdu < last_pdu:
+        #         self.jump()
+        #         last_pdu = pdu
+
+        if dy < 0:
+            self.jump()
 
     # TODO:
-    # def back_forth(self):
-    #     now = pg.time.get_ticks()
+    def back_forth(self):
+        # Back and forth left right distance
+        # self.movement_range = random.choice([i for i in range(1, 30)])
+        # print(self.movement_range)
+        # self.cur_range = 0
+        # self.lr = "l"
+
+        self.edge_distance = (screen_width - 1) - self.rect.x
+        print("EDGE DISTANCE :", self.edge_distance)
+
+        if self.cur_range < self.movement_range and self.lr == "l":
+            # if self.rect.x >= -20:
+
+                self.move_left()
+                self.cur_range += 1
+
+                if self.cur_range >= self.movement_range:
+                    self.lr = "r"
+                    self.cur_range = 0
+                    print("MOVING TOWARDS", self.lr)
+
+        if self.cur_range < self.movement_range and self.lr == "r":
+            # if self.rect.x <= screen_width - 20:
+
+                self.move_right()
+                self.cur_range += 1
+
+                if self.cur_range >= self.movement_range:
+                    self.lr = "l"
+                    self.cur_range = 0
+                    print("MOVING TOWARDS", self.lr)
+
+        # print("MOVEMENT RANGE:",self.movement_range)
+        # print("CURRENT RANGE :",self.cur_range)
 
 # PlatformPlatformPlatform
 
