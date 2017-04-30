@@ -265,8 +265,8 @@ class Game:
 
                 # self.last_spawn = now
 
+            # HP Well to get health after every 10 mob kills
             if (self.player.kills % 10) == 0 and self.player.kills != 0:
-                print("test")
                 hp_well = HP_Well(self)
                 self.hp_wells_group.add(hp_well)
                 self.all_sprites_group.add(hp_well)

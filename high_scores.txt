@@ -706,3 +706,5 @@ Player:24:
 Player:19:
 Player:30:
 Player:37:
+Player:27:
+Player:14:

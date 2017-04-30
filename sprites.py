@@ -424,8 +424,11 @@ class Mob(pg.sprite.Sprite):
             self.move_left()
 
     def chase_y(self):
-        print(self.dpy)
-        if self.dpy < 0 and self.dpy > -450:
+        # print(abs(self.dpy))
+        # TODO
+        # Fix mob jump so that they only just when necessary
+        # if self.dpy < 0 and self.dpy > - screen_height - 100:
+        if abs(self.dpy) < 10:
             self.jump()
 
     def free_move_jump(self):
