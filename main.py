@@ -100,6 +100,7 @@ class Game:
         self.floor_group = pg.sprite.Group()
         self.ui_group = pg.sprite.Group()
         self.bullets_group = pg.sprite.Group()
+        self.hp_wells_group = pg.sprite.Group()
 
         # Individual sprites
         self.player = Player(game)
@@ -120,7 +121,8 @@ class Game:
 
 
         # Mobs
-        for m in range(int(self.player.level * difficulty)):
+        # for m in range(int(self.player.level * difficulty)):
+        for m in range(20):
             self.last_spawn = pg.time.get_ticks()
             spawn_pos = random.choice(spawn_locations)
             m = Mob(self, spawn_pos)
@@ -152,14 +154,16 @@ class Game:
     def events(self):
         for event in pg.event.get():
             if event.type == pg.QUIT:
+
                 if self.playing:
                     self.playing = False
                 self.running = False
 
     # Update
     def update(self):
-            if self.player.cur_hp < 100:
-                self.player.cur_hp += 100
+            # if self.player.cur_hp < 100:
+            #     self.player.cur_hp += 100
+
             self.all_sprites_group.update()
 
             if self.player.velocity.y > 0:
@@ -185,9 +189,11 @@ class Game:
             for m in self.mobs_group:
                 hits = pg.sprite.spritecollide(self.player, self.mobs_group, False)
                 if hits:
-                    defense_check = self.player.defense - m.attack_damage # Nice
-                    if defense_check > 0:
-                        self.player.cur_hp -= self.player.defense - m.attack_damage
+                    damage = random.choice(PLAYER_DEFENSE) \
+                    - m.attack_damage
+
+                    if damage < 0:
+                        self.player.cur_hp -= abs(damage)
 
             # # Scroll up
             # if self.player.rect.top <= screen_height / 8:
@@ -209,13 +215,22 @@ class Game:
             #         plat.rect.y -= abs(self.player.velocity.y)
 
 
-            # Death condition
+                # Death condition
             if self.player.lives <= 0:
                 if self.alive_time > int(self.high_score):
                     self.high_score = "{0:.0f}".format(self.alive_time / 1000)
                     self.record_score_string = "{}:{}:\n".format(self.player, self.high_score)
-                    #print(self.record_score_string)
                     self.write_data()
+
+                self.draw_text("REKT!",
+                               screen_width / 2, screen_height / 2,
+                               align="right",
+                               size=32)
+                self.player.kill()
+
+                pg.display.flip()
+
+                time.sleep(1)
 
                 self.playing = False
 
@@ -223,20 +238,38 @@ class Game:
             if self.player.lives > 0:
                 self.alive_time = pg.time.get_ticks() - self.start_time
 
-            # Keep respawning mobs when they die
+            # | Keep respawning mobs when they die
+
             # print(int(self.player.level) * difficulty)
-            if len(self.mobs_group) < int(self.player.level * difficulty):
-                now = pg.time.get_ticks()
-                if now - self.last_spawn > mob_spawn_rate:
-		    # TODO:
-		    # Maximum spawn count
-                    for m in range(int(self.player.level * difficulty)):
-                        self.last_spawn = now
-                        # x_location = random.randrange(0, screen_width)
-                        spawn_pos = random.choice(spawn_locations)
-                        m = Mob(self, spawn_pos)
-                        self.mobs_group.add(m)
-                        self.all_sprites_group.add(m)
+
+            # if len(self.mobs_group) < int(self.player.level * difficulty):
+            #     now = pg.time.get_ticks()
+            #     if now - self.last_spawn > mob_spawn_rate:
+		    # # TODO:
+		    # # Maximum spawn count
+            #         for m in range(int(self.player.level * difficulty)):
+            #             self.last_spawn = now
+            #             # x_location = random.randrange(0, screen_width)
+            #             spawn_pos = random.choice(spawn_locations)
+            #             m = Mob(self, spawn_pos)
+            #             self.mobs_group.add(m)
+            #             self.all_sprites_group.add(m)
+            if len(self.mobs_group) < MOB_COUNT:
+                # if now - self.last_spawn > mob_spawn_rate:
+                for m in range(MOB_COUNT):
+                    # x_location = random.randrange(0, screen_width)
+                    spawn_pos = random.choice(spawn_locations)
+                    m = Mob(self, spawn_pos)
+                    self.mobs_group.add(m)
+                    self.all_sprites_group.add(m)
+
+                # self.last_spawn = now
+
+            if (self.player.kills % 10) == 0 and self.player.kills != 0:
+                print("test")
+                hp_well = HP_Well(self)
+                self.hp_wells_group.add(hp_well)
+                self.all_sprites_group.add(hp_well)
 
     # Text drawing functions
     def draw_text(self, text, x, y, align="left", size=18, color=white):

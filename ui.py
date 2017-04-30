@@ -1,3 +1,4 @@
+
 #!/usr/bin/python3
 """ ui.py | Tue, Apr 04, 2017 | Roman S. Collins
 """
@@ -7,7 +8,7 @@ import random, os
 from constants import *
 
 class HP_bar(pg.sprite.Sprite):
-    def __init__(self, game, x=0, y=0 ):
+    def __init__(self, game):
         pg.sprite.Sprite.__init__(self)
         self.game = game
 
@@ -17,22 +18,22 @@ class HP_bar(pg.sprite.Sprite):
 
         self.bar_color = green
 
-        self.width = 100
-        self.height = 20
+        self.wx = 100
+        self.hy = 20
 
-        self.image = pg.Surface((self.width, self.height))
+        self.image = pg.Surface((self.wx, self.hy))
         self.rect = self.image.get_rect()
         self.image.fill(self.bar_color)
 
-        self.rect.x = x
-        self.rect.y = y
+        self.rect.x = 20
+        self.rect.y = 20
 
     def update(self):
         # TODO:
         # Fix me, adjust so that health bar is always
         # length 0-100 even if player health is over 100
         if self.game.player.cur_hp > 0:
-            self.width = self.game.player.cur_hp * 2
+            self.wx = self.game.player.cur_hp * 2
 
         if self.game.player.cur_hp >= self.high and self.game.player.cur_hp > self.mid:
             self.bar_color = green
@@ -41,7 +42,7 @@ class HP_bar(pg.sprite.Sprite):
         if self.game.player.cur_hp < self.mid:
             self.bar_color = red
 
-        self.image = pg.Surface((self.width, self.height))
+        self.image = pg.Surface((self.wx, self.hy))
         self.rect = self.image.get_rect()
         self.image.fill(self.bar_color)
 

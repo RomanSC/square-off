@@ -22,7 +22,7 @@ font_dir = "assets/font"
 sounds_dir = "assets/sounds/"
 
 # Fonts
-font_name = "guru meditation nbp"
+font_name = "guru meditation nbpi"
 
 # Difficulty
 difficulty_easy = 3
@@ -30,10 +30,10 @@ difficulty_medium = 6
 difficulty_hard = 8
 difficulty_very_hard = 12
 difficulty_insane = 20
-difficulty = difficulty_medium
+difficulty = difficulty_easy
 
 # Graphics
-screen_width = 960
+screen_width =  960
 screen_height = 960
 fps = 60
 
@@ -44,18 +44,27 @@ player_fric = -0.12
 xp_rate = 0.10
 
 # Mob physics and properties
-mob_gravity = 0.7
-mob_acc = 0.3
-mob_fric = -0.14
+mob_gravity = 0.10
+mob_acc = 0.5
+MOB_FRIC = 0.12
 mob_spawn_rate = 800
-spawn_locations = [(920, 920)]
-mobbackforthranges = [i for i in range(200, (screen_width - 50), 20)]
+spawn_locations = [(screen_height - 40, screen_width - 20)]
+MOB_COUNT = 25
+
+# Back forth range
+MOB_BF_RANGE = [100, 125, 150, 175, 200, 225, 250, 300, 325, 350]
+MOB_HP_REWARD = [0, 0, 1]
+MOB_JUMP_POWER = 10
+MOB_ATTACK_DAMAGE = [i for i in range(300, 500)]
 
 # Bullet physics and properties
-bullet_damage = 20
-bullet_speed = 10
-bullet_lifetime = 1500 # in ms, or thousands of a second
-bullet_rate = 70
+bullet_damage = 50
+bullet_speed = 20
+bullet_lifetime = 600
+bullet_rate = 0.1
+
+BULLET_SHREAD = True
+BULLET_SLOW = 100
 
 # Vectors
 vec = pg.math.Vector2
@@ -65,13 +74,14 @@ player_layer = 2
 platform_layer = 1
 mob_layer = 2
 bullet_layer = 1
+PLAYER_DEFENSE = [i for i in range(40)]
 
 # Platforms
 # platform_list[0] should always be the floor platform
 platform_list = [(screen_width - screen_width, screen_height - 40, screen_width + screen_width , 40),
                  (screen_width / 2 - 50, screen_height * 3 / 4, 100, 20),
                  (125, screen_height - 350, 100, 20),
-                 (350, 200, 100, 20),
+                 (350, 200, 100, 30),
                  (175, 100, 50, 20)]
 
 # Colors
@@ -93,14 +103,6 @@ bg_color = (90, 35, 35)
 
 # Sprites
 bullet_color = cyan
-# mob_colors = [[126, 40, 33], [104, 40, 33], [104, 40, 0], [104, 40, 0],
-#               [104, 40, 0], [104, 40, 0], [192, 172, 26], [104, 59, 0],
-#             [126, 40, 33], [104, 78, 81], [138, 133, 26], [126, 40, 33],
-#             [126, 40, 33], [156, 142, 165], [126, 40, 33], [126, 40, 33],
-#             [126, 40, 33], [126, 40, 33], [61, 66, 66], [61, 66, 66],
-#             [61, 66, 66], [61, 51, 66], [61, 51, 66], [41, 31, 8],
-#             [90, 18, 8], [90, 18, 8], [33, 41, 42]]
-
 
 mob_colors = [[100, 0, 0], [101, 0, 0], [102, 0, 0], [103, 0, 0], [104, 0, 0],
               [105, 0, 0], [106, 0, 0], [107, 0, 0], [108, 0, 0], [109, 0, 0],
