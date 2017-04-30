@@ -80,9 +80,9 @@ PLAYER_DEFENSE = [i for i in range(40)]
 # platform_list[0] should always be the floor platform
 platform_list = [(screen_width - screen_width, screen_height - 40, screen_width + screen_width , 40),
                  (screen_width / 2 - 50, screen_height * 3 / 4, 100, 20),
-                 (125, screen_height - 350, 100, 20),
-                 (350, 200, 100, 30),
-                 (175, 100, 50, 20)]
+                 (125, screen_height - 350, 150, 20),
+                 (350, 200, 200, 30),
+                 (175, 100, 150, 20)]
 
 # Colors
 white = (255, 255, 255)

@@ -424,9 +424,8 @@ class Mob(pg.sprite.Sprite):
             self.move_left()
 
     def chase_y(self):
-        # print(self.dpy)
-
-        if self.dpy <= -20 and not self.dpy > 20:
+        print(self.dpy)
+        if self.dpy < 0 and self.dpy > -450:
             self.jump()
 
     def free_move_jump(self):
@@ -579,7 +578,7 @@ class Bullet(pg.sprite.Sprite):
 
 # TODO:
 class HP_Well(pg.sprite.Sprite):
-    def __init__(self, game, x=100, y=220):
+    def __init__(self, game, x=(350+(200/2)), y=(200-30)):
         self.game = game
         pg._layer = platform_layer
         pg.sprite.Sprite.__init__(self)
@@ -591,14 +590,21 @@ class HP_Well(pg.sprite.Sprite):
         self.rect.y = y
 
     def update(self):
-        print("test hp well update")
+        # print("test hp well update")
         hits = pg.sprite.spritecollide(self,
                                        self.game.player_group,
                                        False,
                                        False)
         if hits and self.game.player.cur_hp < 100:
-            print("test hp well collision")
+            # print("test hp well collision")
             self.game.player.cur_hp += 1
+            self.kill()
+
+        hits = pg.sprite.spritecollide(self,
+                                       self.game.mobs_group,
+                                       False,
+                                       False)
+        if hits:
             self.kill()
 
 # TODO:
