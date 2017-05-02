@@ -7,6 +7,10 @@ from os import path
 
 vec = pg.math.Vector2
 
+pg.mixer.pre_init(44100, -16, 2, 2048)
+pg.mixer.init()
+# pg.mixer.Sound.set_volume(0.40)
+
 # Title
 title = "Square Off"
 
@@ -19,7 +23,9 @@ texture_dir = "assets/textures/"
 mob_texture_dir = "assets/textures/mobs"
 logo_dir = "assets/textures/logo"
 font_dir = "assets/font"
-sounds_dir = "assets/sounds/"
+SOUNDS_DIR = "assets/sounds/"
+SPRITES_TEXTURE_DIR = "assets/textures/other-sprites/"
+PLAYER_TEXTURE_DIR = "assets/textures/player/"
 
 # Fonts
 font_name = "guru meditation nbpi"
@@ -45,8 +51,8 @@ xp_rate = 0.10
 
 # Mob physics and properties
 mob_gravity = 0.10
-mob_acc = 0.5
-MOB_FRIC = 0.12
+mob_acc = 0.8
+MOB_FRIC = 0.16
 mob_spawn_rate = 800
 spawn_locations = [(screen_height - 40, screen_width - 20)]
 MOB_COUNT = 25
@@ -96,10 +102,11 @@ cyan = (0, 255, 255)
 colors = [white, black, red, green, blue, yellow, magenta, cyan]
 
 # Platform color
-platform_color = (29, 20, 19)
+platform_color = (175, 97, 46)
 
 # UI colors
-bg_color = (90, 35, 35)
+BG_COLOR = (90, 35, 35)
+FG_COLOR = (228, 230, 220)
 
 # Sprites
 bullet_color = cyan
@@ -125,9 +132,14 @@ mob_colors = [[100, 0, 0], [101, 0, 0], [102, 0, 0], [103, 0, 0], [104, 0, 0],
               [190, 0, 0], [191, 0, 0], [192, 0, 0], [193, 0, 0], [194, 0, 0],
               [195, 0, 0], [196, 0, 0], [197, 0, 0], [198, 0, 0], [199, 0, 0]]
 
-bgimg = pg.image.load(os.path.join(texture_dir, "background.png"))
+BG_IMG = pg.image.load(os.path.join(texture_dir, "background0.png"))
 
-# Start screen logo
+"""
+| Start screen logo
+|
+|
+
+"""
 img0 = pg.image.load(os.path.join(logo_dir, "0.png"))
 img1 = pg.image.load(os.path.join(logo_dir, "1.png"))
 img2 = pg.image.load(os.path.join(logo_dir, "2.png"))
@@ -174,7 +186,13 @@ logo_list = [img0, img1, img2, img3, img4,
              img30, img31, img32, img33, img34,
              img35]
 
-# Mob textures
+"""
+| Game textures:
+| - Player
+| - Mobs
+| - Health Cube
+| - Projectile
+"""
 mob0 = pg.image.load(os.path.join(mob_texture_dir, "mob0.png"))
 mob1 = pg.image.load(os.path.join(mob_texture_dir, "mob1.png"))
 mob2 = pg.image.load(os.path.join(mob_texture_dir, "mob2.png"))
@@ -203,3 +221,97 @@ mob5, mob6, mob7, mob8,
 mob9, mob10, mob11, mob12,
 mob13, mob14, mob15, mob16,
 mob17, mob18, mob19, mob20,]
+
+PLAYER_IMG = pg.image.load(os.path.join(PLAYER_TEXTURE_DIR,
+                                        "player.png"))
+
+HEALTH_CUBE_IMG = pg.image.load(os.path.join(SPRITES_TEXTURE_DIR,
+                                             "health-cube.png"))
+
+PROJECTILE_IMG = pg.image.load(os.path.join(SPRITES_TEXTURE_DIR,
+                                            "projectile.png"))
+
+"""
+| Sounds
+| - Health cube explode
+| - Projectile_shot
+|
+
+"""
+HEALTH_CUBE_EXPLODE_SND = pg.mixer.Sound(path.join(SOUNDS_DIR,
+                                         "explosion.wav"))
+
+PROJECTILE_SHOOT_SND = pg.mixer.Sound(path.join(SOUNDS_DIR,
+                                      "projectile.wav"))
+
+# MOB_DEATH_SND = pg.mixer.Sound(path.join(SOUNDS_DIR,
+#                                "mob_death.mp3"))
+
+"""
+
+| Sounds for mobs hit by the player.
+|
+|
+
+"""
+MOB_HIT_1_SND = pg.mixer.Sound(path.join(SOUNDS_DIR,
+                                     "mobs/hit/hit-1.wav"))
+MOB_HIT_2_SND = pg.mixer.Sound(path.join(SOUNDS_DIR,
+                                     "mobs/hit/hit-2.wav"))
+MOB_HIT_3_SND = pg.mixer.Sound(path.join(SOUNDS_DIR,
+                                     "mobs/hit/hit-3.wav"))
+MOB_HIT_SND = [MOB_HIT_1_SND, MOB_HIT_2_SND, MOB_HIT_3_SND,]
+
+"""
+| Sounds for mobs killed by the player.
+|
+|
+
+"""
+
+DEATH_1_SND = pg.mixer.Sound(path.join(SOUNDS_DIR,
+                                       "mobs/death/die-1.wav"))
+DEATH_2_SND = pg.mixer.Sound(path.join(SOUNDS_DIR,
+                                       "mobs/death/die-2.wav"))
+MOB_DEATH_SND = [DEATH_1_SND, DEATH_2_SND]
+
+"""
+| Sounds for when mobs spawn.
+|
+|
+
+"""
+MOB_SPWN_SND = pg.mixer.Sound(path.join(SOUNDS_DIR,
+                                        "mobs/spawn/belch.wav"))
+"""
+    Local Forecast - Elevator
+    Kevin Macleod
+
+    http://incompetech.com/music/royalty-free/index.html?isrc=USUAN1300012
+
+"""
+
+LOCAL_FORECAST = pg.mixer.music.load(path.join(SOUNDS_DIR,
+                                    "elevator/local_forecast_elevator.mp3"))
+
+"""
+| Sounds for music, moved to main.py
+|
+|
+
+"""
+# TRACK_1 = pg.mixer.music.load(path.join(SOUNDS_DIR,
+#                                    "music/BGM_Alpha.mp3"))
+# TRACK_2 = pg.mixer.music.load(path.join(SOUNDS_DIR,
+#                                    "music/BGM_Beta.mp3"))
+# TRACK_3 = pg.mixer.music.load(path.join(SOUNDS_DIR,
+#                                    "music/BGM_Delta.mp3"))
+# TRACK_4 = pg.mixer.music.load(path.join(SOUNDS_DIR,
+#                                    "music/BGM_Epsilon.mp3"))
+# TRACK_5 = pg.mixer.music.load(path.join(SOUNDS_DIR,
+#                                    "music/BGM_Gamma.mp3"))
+# TRACK_6 = pg.mixer.music.load(path.join(SOUNDS_DIR,
+#                                    "music/BGM_Menu.mp3"))
+# TRACK_7 = pg.mixer.music.load(path.join(SOUNDS_DIR,
+#                                    "music/BGM_Omega.mp3"))
+# MUSIC_SND = [TRACK_1, TRACK_2, TRACK_3, TRACK_4, TRACK_5, TRACK_6, TRACK_7]

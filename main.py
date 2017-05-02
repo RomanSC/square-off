@@ -100,7 +100,7 @@ class Game:
         self.floor_group = pg.sprite.Group()
         self.ui_group = pg.sprite.Group()
         self.bullets_group = pg.sprite.Group()
-        self.hp_wells_group = pg.sprite.Group()
+        self.health_cubes_group = pg.sprite.Group()
 
         # Individual sprites
         self.player = Player(game)
@@ -137,6 +137,32 @@ class Game:
 
         # Last time player shot
         self.last_shot = 0
+
+        # Play music
+        # for x in range(len(MUSIC_SND)):
+        #     song = MUSIC_SND[x]
+        #     pg.mixer.music.queue(song)
+
+        pg.mixer.music.load(path.join(SOUNDS_DIR,
+                                           "music/BGM_Alpha.mp3"))
+        pg.mixer.music.play()
+
+        pg.mixer.music.queue(path.join(SOUNDS_DIR,
+                                           "music/BGM_Beta.mp3"))
+        pg.mixer.music.queue(path.join(SOUNDS_DIR,
+                                           "music/BGM_Delta.mp3"))
+        pg.mixer.music.queue(path.join(SOUNDS_DIR,
+                                           "music/BGM_Epsilon.mp3"))
+        pg.mixer.music.queue(path.join(SOUNDS_DIR,
+                                           "music/BGM_Gamma.mp3"))
+        pg.mixer.music.queue(path.join(SOUNDS_DIR,
+                                           "music/BGM_Menu.mp3"))
+        pg.mixer.music.queue(path.join(SOUNDS_DIR,
+                                   "music/BGM_Omega.mp3"))
+
+        if not pg.mixer.music.get_busy():
+            pg.mixer.music.play()
+            print("new song")
 
         # Run the game
         self.run()
@@ -263,13 +289,16 @@ class Game:
                     self.mobs_group.add(m)
                     self.all_sprites_group.add(m)
 
+                    pg.mixer.Sound.set_volume(MOB_SPWN_SND, 0.04)
+                    pg.mixer.Sound.play(MOB_SPWN_SND)
+
                 # self.last_spawn = now
 
             # HP Well to get health after every 10 mob kills
             if (self.player.kills % 10) == 0 and self.player.kills != 0:
-                hp_well = HP_Well(self)
-                self.hp_wells_group.add(hp_well)
-                self.all_sprites_group.add(hp_well)
+                health_cube = Health_Cube(self)
+                self.health_cubes_group.add(health_cube)
+                self.all_sprites_group.add(health_cube)
 
     # Text drawing functions
     def draw_text(self, text, x, y, align="left", size=18, color=white):
@@ -290,7 +319,7 @@ class Game:
         self.screen.blit(text_surface, text_rect)
 
     def draw(self):
-        self.screen.fill(bg_color) # In case background image not blit
+        self.screen.fill(BG_COLOR) # In case background image not blit
         self.fill_background()
         self.all_sprites_group.draw(self.screen)
 
@@ -369,6 +398,27 @@ class Game:
                        screen_width/2, screen_height - screen_height / 4 + 30,
                        align="center", size=30)
 
+        # Play music
+        pg.mixer.music.load(path.join(SOUNDS_DIR,
+                                           "music/BGM_Alpha.mp3"))
+        pg.mixer.music.play()
+
+        pg.mixer.music.queue(path.join(SOUNDS_DIR,
+                                           "music/BGM_Beta.mp3"))
+        pg.mixer.music.queue(path.join(SOUNDS_DIR,
+                                           "music/BGM_Delta.mp3"))
+        pg.mixer.music.queue(path.join(SOUNDS_DIR,
+                                           "music/BGM_Epsilon.mp3"))
+        pg.mixer.music.queue(path.join(SOUNDS_DIR,
+                                           "music/BGM_Gamma.mp3"))
+        pg.mixer.music.queue(path.join(SOUNDS_DIR,
+                                           "music/BGM_Menu.mp3"))
+        pg.mixer.music.queue(path.join(SOUNDS_DIR,
+                                   "music/BGM_Omega.mp3"))
+
+        if not pg.mixer.music.get_busy():
+            pg.mixer.music.play()
+
         for img in logo_list:
             img = img.convert()
 
@@ -377,12 +427,12 @@ class Game:
 
     def fill_background(self):
         # Background
-        self.screen.fill(bg_color) # Just in case
-        bgimg = pg.image.load(os.path.join(texture_dir, "background.png")).convert()
+        self.screen.fill(BG_COLOR) # Just in case
+        # bgimg = pg.image.load(os.path.join(texture_dir, "background0.png")).convert()
         self.bgimg_pos = (screen_width/2, screen_height/2)
-        self.bgrect = bgimg.get_rect()
+        self.bgrect = BG_IMG.get_rect()
         self.bgrect.center = (self.bgimg_pos)
-        self.screen.blit(bgimg, self.bgrect)
+        self.screen.blit(BG_IMG, self.bgrect)
 
 g = Game()
 g.start_screen()

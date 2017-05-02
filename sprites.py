@@ -4,6 +4,8 @@
 import pygame as pg
 import random, os
 
+import time
+
 from constants import *
 
 vec = pg.math.Vector2
@@ -15,8 +17,12 @@ class Player(pg.sprite.Sprite):
         pg._layer = player_layer
         pg.sprite.Sprite.__init__(self)
         self.game = game
-        self.image = pg.Surface((30, 30))
-        self.image.fill(blue)
+        # self.image = pg.Surface((30, 30))
+        # self.image.fill(blue)
+
+        self.image = pg.transform.scale(PLAYER_IMG, (42, 42))
+        self.image.convert()
+
         self.rect = self.image.get_rect()
 
         # Center the player on the screen
@@ -81,6 +87,30 @@ class Player(pg.sprite.Sprite):
         if self.cur_hp <= 0:
             self.lives -= 1
 
+        if self.rect.y < -50  or self.rect.y > screen_height + 50 \
+        or self.rect.x < -50 or self.rect.x > screen_width + 50:
+            self.cur_hp = 0
+            self.kill()
+
+            self.game.draw_text("ERROR: 3789 Failed to import map data. (Segmentation Fault)",
+                           20, screen_height / 2,
+                           size=32)
+            self.kill()
+
+            pg.display.flip()
+
+            pg.mixer.music.stop()
+
+            pg.mixer.music.load(path.join(SOUNDS_DIR,
+                                          "elevator/local_forecast_elevator.mp3"))
+            pg.mixer.music.play()
+
+            pg.mixer.music.set_volume(30)
+
+            time.sleep(5)
+
+            self.game.playing = False
+
     def player_controls(self):
         keystate = pg.key.get_pressed()
 
@@ -114,6 +144,9 @@ class Player(pg.sprite.Sprite):
                 self.game.bullets_group.add(b)
                 self.game.all_sprites_group.add(b)
                 self.last_shot = now
+
+                pg.mixer.Sound.set_volume(PROJECTILE_SHOOT_SND, 0.07)
+                pg.mixer.Sound.play(PROJECTILE_SHOOT_SND)
 
     def move_left(self):
         self.acceleration.x -= player_acc
@@ -264,10 +297,12 @@ class Mob(pg.sprite.Sprite):
             self.game.player.kills += 1
             self.game.player.level += xp_rate
 
-            if self.game.player.cur_hp < self.game.player.max_hp:
-                gen_hp_reward = random.choice(MOB_HP_REWARD)
-                if gen_hp_reward > 0:
-                    self.game.player.cur_hp += gen_hp_reward
+            # if self.game.player.cur_hp < self.game.player.max_hp:
+            #     # gen_hp_reward = random.choice(MOB_HP_REWARD)
+            #     # if gen_hp_reward > 0:
+            #         self.game.player.cur_hp += gen_hp_reward
+
+            pg.mixer.Sound.play(random.choice(MOB_DEATH_SND))
 
         # Lost health if shot
         hits = pg.sprite.spritecollide(self,
@@ -276,6 +311,429 @@ class Mob(pg.sprite.Sprite):
                                        False)
         if hits:
             self.health -= bullet_damage * self.game.player.level
+
+            pg.mixer.Sound.play(random.choice(MOB_HIT_SND))
+
+
+        # hits = pg.sprite.spritecollide(self,
+        #                                self.game.player_group,
+        #                                False,
+        #                                False)
+        # if hits:
+        #     self.kill()
+
+        # if self.move_freely:
+        #     self.free_move()
+        # elif not self.move_freely:
+        #     # TODO function to make mobs move back and forth
+        #     self.back_forth()
+
+        if self.movement_style <= 4:
+            self.free_move()
+        elif self.movement_style <= 8:
+            self.back_forth()
+        elif self.movement_style <= 10:
+            self.free_move_jump()
+        else:
+            self.back_forth()
+
+        # TODO:
+        # Fix distance
+        # Find player
+        # distance = self.game.player.rect.x - self.rect.x
+        # if distance > 0:
+        #     self.move_right()
+        # elif distance < 0:
+        #     self.move_left()
+
+        # last_pdu = abs(self.game.player.rect.y - self.rect.y)
+        # if self.game.player.rect.y < self.rect.y:
+        #     pdu = abs(self.game.player.rect.y - self.rect.y)
+        #     if pdu < last_pdu:
+        #         self.jump()
+        #         last_pdu = pdu
+
+        # Limit height and width
+        if self.rect.y - (screen_height / 2) > screen_height:
+            self.kill()
+        if self.rect.x - (screen_width / 2) > screen_width:
+            self.kill()
+
+        self.acceleration.x += self.velocity.x * self.friction
+
+        self.velocity += self.acceleration
+        self.position += self.velocity + mob_acc * self.acceleration
+
+        self.rect.midbottom = self.position
+
+    def move_left(self):
+        # print(self.distance_edge_left_x)
+        if self.distance_edge_left_x < 0:
+            self.acceleration.x -= mob_acc
+
+    def move_right(self):
+        # print(self.distance_edge_right_x)
+        if self.distance_edge_right_x > 0:
+            self.acceleration.x += mob_acc
+
+    # def move_up(self):
+    #     self.acceleration.y -= mob_acc
+
+    def move_down(self):
+        self.acceleration.y += mob_acc
+
+    def jump(self):
+        # TODO:
+        # Max jump
+        if not self.rect.y < 1 and self.game.player.rect.y < self.rect.y:
+
+            self.rect.x += 1
+            hits = pg.sprite.spritecollide(self,
+                                           self.game.platforms_group,
+                                           False)
+            self.rect.x -= 1
+
+            if not hits:
+                self.health += 11
+
+                # Charge at Player?
+                # charge = random.choice([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                #                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                #                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                #                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                #                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                #                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                #                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                #                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                #                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                #                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                #                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                #                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                #                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                #                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                #                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                #                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                #                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                #                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                #                         1, 7])
+                # if charge > 0:
+                #     self.friction = 0
+
+                # if charge == 7:
+                #     self.position.y -= 20
+
+            if hits:
+                now = pg.time.get_ticks()
+                if now - self.last_jump > self.jump_delay:
+                    self.velocity.y += -abs(MOB_JUMP_POWER)
+
+                charge = random.choice([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                        1, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                        3])
+                if charge > 0:
+                    self.friction = 0
+
+                if charge == 7:
+                    self.rect.y += 20
+
+                if charge == 3:
+                    pass
+
+
+    def free_move(self):
+        # dx = self.game.player.rect.x - self.rect.x
+        # dy = self.game.player.rect.y - self.rect.y
+        # print("DISTANCE FROM PLAYER:", dy)
+
+        # print(self.game.player.right - self.rect.left)
+
+        # if not dx > self.aggro_range:
+        #     self.move_right()
+        # elif not dx < self.aggro_range:
+        #     self.move_left()
+
+        # print(dx)
+
+        # Aggro range is the square root of all x1 - x2 and
+        # y1 - y2 distances less than aggro range
+
+        hits = pg.sprite.groupcollide(self.game.bullets_group,
+                                      self.game.mobs_group, False, False)
+
+        if abs(self.dpy) >= 100 and not hits:
+            if abs(self.dpx) >= 0 and abs(self.dpx) <= self.aggro_range and not hits:
+                self.chase_x()
+            self.chase_y()
+
+        if hits:
+            self.chase_x()
+        else:
+            self.back_forth()
+
+            # if dx >= 0 and not dx > self.aggro_range:
+            #     # and not dx > self.aggro_range:
+            #     print("HAVE AGGRO")
+            #     self.chase_x(dx)
+
+            # elif dx <= 0 and not dx < -abs(self.aggro_range):
+            #     print("HAVE AGGRO")
+            #     self.chase_x(dx)
+
+            # elif abs(dx) > self.aggro_range:
+            #     print("NO AGGRO")
+
+        # last_pdu = abs(self.game.player.rect.y - self.rect.y)
+        # if self.game.player.rect.y < self.rect.y:
+        #     pdu = abs(self.game.player.rect.y - self.rect.y)
+        #     if pdu < last_pdu:
+        #         self.jump()
+        #         last_pdu = pdu
+
+
+        # if dy < 0:
+        #     self.jump()
+
+        # if dy < self.aggro_range:
+        #     self.jump()
+
+    def chase_x(self):
+        # print(self.dpx)
+
+        if self.dpx > 0:
+            self.move_right()
+        if self.dpx < 0:
+            self.move_left()
+
+    def chase_y(self):
+        # print(abs(self.dpy))
+        # TODO
+        # Fix mob jump so that they only just when necessary
+        # if self.dpy < 0 and self.dpy > - screen_height - 100:
+        # if abs(self.dpy) < 10:
+        #     self.jump()
+        if not self.rect.y < 1 and self.game.player.rect.y < self.rect.y:
+            self.jump()
+
+    def free_move_jump(self):
+        hits = pg.sprite.groupcollide(self.game.bullets_group,
+                                      self.game.mobs_group, False, False)
+
+        if abs(self.dpy) >= 0 and abs(self.dpy) <= self.aggro_range and not hits:
+            if abs(self.dpx) >= 0 and abs(self.dpx) <= self.aggro_range and not hits:
+                self.chase_x()
+            self.chase_y()
+
+        if hits:
+            self.chase_x()
+            self.chase_y()
+        else:
+            self.back_forth()
+
+    # TODO:
+    def back_forth(self):
+        # Back and forth left right distance
+        # self.movement_range = random.choice([i for i in range(1, 30)])
+        # print(s_range = 0
+        # self.lr = "l"
+        hits = pg.sprite.groupcollide(self.game.bullets_group,
+                                      self.game.mobs_group, False, False)
+
+        if not hits:
+            if self.cur_range < self.movement_range and self.lr == "l" and not hits:
+                if abs(self.distance_edge_left_x) > 0:
+                        self.move_left()
+                        self.cur_range += 1
+
+                elif self.rect.x > screen_width / 2:
+                    self.cur_range = self.movement_range
+                    self.lr = "r"
+                    self.cur_range = 0
+
+                if self.cur_range >= self.movement_range:
+
+                    self.lr = "r"
+                    self.cur_range = 0
+                    # print("MOVING TOWARDS", self.lr)
+
+            if self.cur_range < self.movement_range and self.lr == "r" and not hits:
+                if abs(self.distance_edge_right_x) > 0:
+                    self.move_right()
+                    self.cur_range += 1
+                elif self.rect.x < screen_width / 2:
+                    self.cur_range = self.movement_range
+                    self.lr = "l"
+                    self.cur_range = 0
+
+                elif self.rect.x < screen_width / 2:
+                     self.cur_range = self.movement_range
+
+                if self.cur_range >= self.movement_range:
+
+                    self.lr = "l"
+                    self.cur_range = 0
+                    # print("MOVING TOWARDS", self.lr)
+
+        elif hits:
+            self.chase_x()
+
+        # print("MOVEMENT RANGE:",self.movement_range)
+        # print("CURRENT RANGE :",self.cur_range)
+
+        # TODO:
+        # Flying mobs
+
+# PlatformPlatformPlatform
+
+class Platform(pg.sprite.Sprite):
+    def __init__(self, game, x, y, w, h):
+        pg._layer = platform_layer
+        pg.sprite.Sprite.__init__(self)
+        self.image = pg.Surface((w, h))
+        self.image.fill(platform_color)
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.game = game
+
+# TODO:
+class Bullet(pg.sprite.Sprite):
+    def __init__(self, game):
+        self.game = game
+        pg._layer = bullet_layer
+        pg.sprite.Sprite.__init__(self)
+        # self.image = pg.Surface((9, 9))
+        # self.image.fill(bullet_color)
+
+        self.image = pg.transform.scale(PROJECTILE_IMG, (10, 10))
+        self.image.convert()
+
+        self.rect = self.image.get_rect()
+
+        # For range
+        self.lifetime = pg.time.get_ticks()
+
+        # Get mouse position
+        self.target = vec(pg.mouse.get_pos())
+
+        # Start at player
+        self.position = vec(self.game.player.position)
+        self.start_pos = vec(self.game.player.position)
+
+        # if self.target.y > self.position.y:
+        #     self.position.y += 0
+
+        if self.target.y < self.position.y:
+            self.position.y -= 35
+
+        if self.target.x > self.position.x:
+            self.position.x += 20
+
+        elif self.target.x < self.position.x:
+            self.position.x -= 30
+
+        # Distance
+        self.distance = self.target.x - self.position.x
+
+        self.start_life = pg.time.get_ticks()
+
+        # x and y distance, also the opposite and adjacent
+        # Ratio of x and y distance is also the tangent or
+        # angle
+        self.dy = self.target.y - self.position.y
+        self.dx = self.target.x - self.position.x
+
+        try:
+
+            self.angle = (self.dy / self.dx) # Opposite adjacent
+
+        except ZeroDivisionError:
+            pass
+
+        # Normalized vector
+        # https://encrypted.google.com/search?hl=en&q=normalizing%20vectors
+        self.nize = math.sqrt(self.dx ** 2 + self.dy ** 2)
+
+    def update(self):
+        self.position.x += (self.dx / self.nize ) * bullet_speed
+        self.position.y += (self.dy / self.nize) * bullet_speed
+
+        now = pg.time.get_ticks()
+        if now - self.start_life > bullet_lifetime:
+            self.kill()
+
+        self.rect.x = self.position.x
+        self.rect.y = self.position.y
+
+        pg.transform.rotate(self.image, 45)
+
+        # TODO:
+        # Move this here
+        # If the bullets hit mobs
+        # for m in self.game.mobs_group:
+        #     hits = pg.sprite.spritecollide(m,
+        #                                    self.game.bullets_group,
+        #                                    True,
+        #                                    False)
+        #     if hits:
+        #         m.health -= bullet_damage * self.game.player.level
+        #         m.acceleration.x -= self.dx / 10
+        #         m.acceleration.y -= self.dy / 10
+
+# TODO:
+class Health_Cube(pg.sprite.Sprite):
+    def __init__(self, game, x=(350+(200/2)), y=(200-30)):
+        self.game = game
+        pg._layer = platform_layer
+        pg.sprite.Sprite.__init__(self)
+        # self.image = pg.Surface((10, 10))
+        # self.image.fill(magenta)
+
+        self.image = pg.transform.scale(HEALTH_CUBE_IMG, (20, 20))
+        self.image.convert()
+
+        self.rect = self.image.get_rect()
+
+        self.rect.x = x
+        self.rect.y = y
+
+    def update(self):
+        # print("test hp well update")
+        hits = pg.sprite.spritecollide(self,
+                                       self.game.player_group,
+                                       False,
+                                       False)
+        if hits and self.game.player.cur_hp < 100:
+            # print("test hp well collision")
+            self.game.player.cur_hp += 1
+            self.kill()
+
+        hits = pg.sprite.spritecollide(self,
+                                       self.game.mobs_group,
+                                       False,
+                                       False)
+        if hits:
+            self.kill()
+            # TODO:
+            # Explosion sound
+            pg.mixer.Sound
+
 
         # hits = pg.sprite.spritecollide(self,
         #                                self.game.player_group,
@@ -518,8 +976,12 @@ class Bullet(pg.sprite.Sprite):
         self.game = game
         pg._layer = bullet_layer
         pg.sprite.Sprite.__init__(self)
-        self.image = pg.Surface((9, 9))
-        self.image.fill(bullet_color)
+        # self.image = pg.Surface((9, 9))
+        # self.image.fill(bullet_color)
+
+        self.image = pg.transform.scale(PROJECTILE_IMG, (10, 10))
+        self.image.convert()
+
         self.rect = self.image.get_rect()
 
         # For range
@@ -531,7 +993,18 @@ class Bullet(pg.sprite.Sprite):
         # Start at player
         self.position = vec(self.game.player.position)
         self.start_pos = vec(self.game.player.position)
-        self.position.y -= 5
+
+        # if self.target.y > self.position.y:
+        #     self.position.y += 0
+
+        if self.target.y < self.position.y:
+            self.position.y -= 35
+
+        if self.target.x > self.position.x:
+            self.position.x += 20
+
+        elif self.target.x < self.position.x:
+            self.position.x -= 30
 
         # Distance
         self.distance = self.target.x - self.position.x
@@ -544,18 +1017,18 @@ class Bullet(pg.sprite.Sprite):
         self.dy = self.target.y - self.position.y
         self.dx = self.target.x - self.position.x
 
-        self.angle = 0
+        try:
 
-        # Normalize vector
+            self.angle = (self.dy / self.dx) # Opposite adjacent
+
+        except ZeroDivisionError:
+            pass
+
+        # Normalized vector
         # https://encrypted.google.com/search?hl=en&q=normalizing%20vectors
         self.nize = math.sqrt(self.dx ** 2 + self.dy ** 2)
 
     def update(self):
-        # if BULLET_SHREAD:
-        #     self.position.y += (self.dy / self.angle) * bullet_speed)
-        #     self.position.x += (self.dx / self.angle) * bullet_speed)
-
-        # elif not BULLET_SHREAD:
         self.position.x += (self.dx / self.nize ) * bullet_speed
         self.position.y += (self.dy / self.nize) * bullet_speed
 
@@ -565,6 +1038,8 @@ class Bullet(pg.sprite.Sprite):
 
         self.rect.x = self.position.x
         self.rect.y = self.position.y
+
+        pg.transform.rotate(self.image, 45)
 
         # TODO:
         # Move this here
@@ -580,13 +1055,17 @@ class Bullet(pg.sprite.Sprite):
         #         m.acceleration.y -= self.dy / 10
 
 # TODO:
-class HP_Well(pg.sprite.Sprite):
+class Health_Cube(pg.sprite.Sprite):
     def __init__(self, game, x=(350+(200/2)), y=(200-30)):
         self.game = game
         pg._layer = platform_layer
         pg.sprite.Sprite.__init__(self)
-        self.image = pg.Surface((10, 10))
-        self.image.fill(magenta)
+        # self.image = pg.Surface((10, 10))
+        # self.image.fill(magenta)
+
+        self.image = pg.transform.scale(HEALTH_CUBE_IMG, (20, 20))
+        self.image.convert()
+
         self.rect = self.image.get_rect()
 
         self.rect.x = x
@@ -609,6 +1088,368 @@ class HP_Well(pg.sprite.Sprite):
                                        False)
         if hits:
             self.kill()
+            # TODO:
+            # Explosion sound
+            pg.mixer.Sound
+
+
+        # hits = pg.sprite.spritecollide(self,
+        #                                self.game.player_group,
+        #                                False,
+        #                                False)
+        # if hits:
+        #     self.kill()
+
+        # if self.move_freely:
+        #     self.free_move()
+        # elif not self.move_freely:
+        #     # TODO function to make mobs move back and forth
+        #     self.back_forth()
+
+        if self.movement_style <= 4:
+            self.free_move()
+        elif self.movement_style <= 8:
+            self.back_forth()
+        elif self.movement_style <= 10:
+            self.free_move_jump()
+        else:
+            self.back_forth()
+
+        # TODO:
+        # Fix distance
+        # Find player
+        # distance = self.game.player.rect.x - self.rect.x
+        # if distance > 0:
+        #     self.move_right()
+        # elif distance < 0:
+        #     self.move_left()
+
+        # last_pdu = abs(self.game.player.rect.y - self.rect.y)
+        # if self.game.player.rect.y < self.rect.y:
+        #     pdu = abs(self.game.player.rect.y - self.rect.y)
+        #     if pdu < last_pdu:
+        #         self.jump()
+        #         last_pdu = pdu
+
+        # Limit height and width
+        if self.rect.y - (screen_height / 2) > screen_height:
+            self.kill()
+        if self.rect.x - (screen_width / 2) > screen_width:
+            self.kill()
+
+        self.acceleration.x += self.velocity.x * self.friction
+
+        self.velocity += self.acceleration
+        self.position += self.velocity + mob_acc * self.acceleration
+
+        self.rect.midbottom = self.position
+
+    def move_left(self):
+        # print(self.distance_edge_left_x)
+        if self.distance_edge_left_x < 0:
+            self.acceleration.x -= mob_acc
+
+    def move_right(self):
+        # print(self.distance_edge_right_x)
+        if self.distance_edge_right_x > 0:
+            self.acceleration.x += mob_acc
+
+    # def move_up(self):
+    #     self.acceleration.y -= mob_acc
+
+    def move_down(self):
+        self.acceleration.y += mob_acc
+
+    def jump(self):
+        # TODO:
+        # Max jump
+        self.rect.x += 1
+        hits = pg.sprite.spritecollide(self,
+                                       self.game.platforms_group,
+                                       False)
+        self.rect.x -= 1
+
+
+        if hits:
+            now = pg.time.get_ticks()
+            if now - self.last_jump > self.jump_delay:
+                self.velocity.y += -abs(MOB_JUMP_POWER)
+
+    def free_move(self):
+        # dx = self.game.player.rect.x - self.rect.x
+        # dy = self.game.player.rect.y - self.rect.y
+        # print("DISTANCE FROM PLAYER:", dy)
+
+        # print(self.game.player.right - self.rect.left)
+
+        # if not dx > self.aggro_range:
+        #     self.move_right()
+        # elif not dx < self.aggro_range:
+        #     self.move_left()
+
+        # print(dx)
+
+        # Aggro range is the square root of all x1 - x2 and
+        # y1 - y2 distances less than aggro range
+
+        hits = pg.sprite.groupcollide(self.game.bullets_group,
+                                      self.game.mobs_group, False, False)
+
+        if abs(self.dpy) >= 0 and abs(self.dpy) <= self.aggro_range and not hits:
+            if abs(self.dpx) >= 0 and abs(self.dpx) <= self.aggro_range and not hits:
+                self.chase_x()
+            self.chase_y()
+
+        if hits:
+            self.chase_x()
+        else:
+            self.back_forth()
+
+            # if dx >= 0 and not dx > self.aggro_range:
+            #     # and not dx > self.aggro_range:
+            #     print("HAVE AGGRO")
+            #     self.chase_x(dx)
+
+            # elif dx <= 0 and not dx < -abs(self.aggro_range):
+            #     print("HAVE AGGRO")
+            #     self.chase_x(dx)
+
+            # elif abs(dx) > self.aggro_range:
+            #     print("NO AGGRO")
+
+        # last_pdu = abs(self.game.player.rect.y - self.rect.y)
+        # if self.game.player.rect.y < self.rect.y:
+        #     pdu = abs(self.game.player.rect.y - self.rect.y)
+        #     if pdu < last_pdu:
+        #         self.jump()
+        #         last_pdu = pdu
+
+
+        # if dy < 0:
+        #     self.jump()
+
+        # if dy < self.aggro_range:
+        #     self.jump()
+
+    def chase_x(self):
+        # print(self.dpx)
+
+        if self.dpx > 0:
+            self.move_right()
+        if self.dpx < 0:
+            self.move_left()
+
+    def chase_y(self):
+        # print(abs(self.dpy))
+        # TODO
+        # Fix mob jump so that they only just when necessary
+        # if self.dpy < 0 and self.dpy > - screen_height - 100:
+        if abs(self.dpy) < 10:
+            self.jump()
+
+    def free_move_jump(self):
+        hits = pg.sprite.groupcollide(self.game.bullets_group,
+                                      self.game.mobs_group, False, False)
+
+        if abs(self.dpy) >= 0 and abs(self.dpy) <= self.aggro_range and not hits:
+            if abs(self.dpx) >= 0 and abs(self.dpx) <= self.aggro_range and not hits:
+                self.chase_x()
+            self.chase_y()
+
+        if hits:
+            self.chase_x()
+            self.chase_y()
+        else:
+            self.back_forth()
+
+    # TODO:
+    def back_forth(self):
+        # Back and forth left right distance
+        # self.movement_range = random.choice([i for i in range(1, 30)])
+        # print(s_range = 0
+        # self.lr = "l"
+        hits = pg.sprite.groupcollide(self.game.bullets_group,
+                                      self.game.mobs_group, False, False)
+
+        if not hits:
+            if self.cur_range < self.movement_range and self.lr == "l" and not hits:
+                if abs(self.distance_edge_left_x) > 0:
+                        self.move_left()
+                        self.cur_range += 1
+
+                elif self.rect.x > screen_width / 2:
+                    self.cur_range = self.movement_range
+                    self.lr = "r"
+                    self.cur_range = 0
+
+                if self.cur_range >= self.movement_range:
+
+                    self.lr = "r"
+                    self.cur_range = 0
+                    # print("MOVING TOWARDS", self.lr)
+
+            if self.cur_range < self.movement_range and self.lr == "r" and not hits:
+                if abs(self.distance_edge_right_x) > 0:
+                    self.move_right()
+                    self.cur_range += 1
+                elif self.rect.x < screen_width / 2:
+                    self.cur_range = self.movement_range
+                    self.lr = "l"
+                    self.cur_range = 0
+
+                elif self.rect.x < screen_width / 2:
+                     self.cur_range = self.movement_range
+
+                if self.cur_range >= self.movement_range:
+
+                    self.lr = "l"
+                    self.cur_range = 0
+                    # print("MOVING TOWARDS", self.lr)
+
+        elif hits:
+            self.chase_x()
+
+        # print("MOVEMENT RANGE:",self.movement_range)
+        # print("CURRENT RANGE :",self.cur_range)
+
+        # TODO:
+        # Flying mobs
+
+# PlatformPlatformPlatform
+
+class Platform(pg.sprite.Sprite):
+    def __init__(self, game, x, y, w, h):
+        pg._layer = platform_layer
+        pg.sprite.Sprite.__init__(self)
+        self.image = pg.Surface((w, h))
+        self.image.fill(platform_color)
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.game = game
+
+# TODO:
+class Bullet(pg.sprite.Sprite):
+    def __init__(self, game):
+        self.game = game
+        pg._layer = bullet_layer
+        pg.sprite.Sprite.__init__(self)
+        # self.image = pg.Surface((9, 9))
+        # self.image.fill(bullet_color)
+
+        self.image = pg.transform.scale(PROJECTILE_IMG, (13, 13))
+        self.image.convert()
+
+        self.rect = self.image.get_rect()
+
+        # For range
+        self.lifetime = pg.time.get_ticks()
+
+        # Get mouse position
+        self.target = vec(pg.mouse.get_pos())
+
+        # Start at player
+        self.position = vec(self.game.player.position)
+        self.start_pos = vec(self.game.player.position)
+
+        # if self.target.y > self.position.y:
+        #     self.position.y += 0
+
+        if self.target.y < self.position.y:
+            self.position.y -= 35
+
+        if self.target.x > self.position.x:
+            self.position.x += 20
+
+        elif self.target.x < self.position.x:
+            self.position.x -= 30
+
+        # Distance
+        self.distance = self.target.x - self.position.x
+
+        self.start_life = pg.time.get_ticks()
+
+        # x and y distance, also the opposite and adjacent
+        # Ratio of x and y distance is also the tangent or
+        # angle
+        self.dy = self.target.y - self.position.y
+        self.dx = self.target.x - self.position.x
+
+        try:
+
+            self.angle = (self.dy / self.dx) # Opposite adjacent
+
+        except ZeroDivisionError:
+            pass
+
+        # Normalized vector
+        # https://encrypted.google.com/search?hl=en&q=normalizing%20vectors
+        self.nize = math.sqrt(self.dx ** 2 + self.dy ** 2)
+
+    def update(self):
+        self.position.x += (self.dx / self.nize ) * bullet_speed
+        self.position.y += (self.dy / self.nize) * bullet_speed
+
+        now = pg.time.get_ticks()
+        if now - self.start_life > bullet_lifetime:
+            self.kill()
+
+        self.rect.x = self.position.x
+        self.rect.y = self.position.y
+
+        pg.transform.rotate(self.image, 45)
+
+        # TODO:
+        # Move this here
+        # If the bullets hit mobs
+        # for m in self.game.mobs_group:
+        #     hits = pg.sprite.spritecollide(m,
+        #                                    self.game.bullets_group,
+        #                                    True,
+        #                                    False)
+        #     if hits:
+        #         m.health -= bullet_damage * self.game.player.level
+        #         m.acceleration.x -= self.dx / 10
+        #         m.acceleration.y -= self.dy / 10
+
+# TODO:
+class Health_Cube(pg.sprite.Sprite):
+    def __init__(self, game, x=(350+(200/2)), y=(200-30)):
+        self.game = game
+        pg._layer = platform_layer
+        pg.sprite.Sprite.__init__(self)
+        # self.image = pg.Surface((10, 10))
+        # self.image.fill(magenta)
+
+        self.image = pg.transform.scale(HEALTH_CUBE_IMG, (20, 20))
+        self.image.convert()
+
+        self.rect = self.image.get_rect()
+
+        self.rect.x = x
+        self.rect.y = y
+
+    def update(self):
+        # print("test hp well update")
+        hits = pg.sprite.spritecollide(self,
+                                       self.game.player_group,
+                                       False,
+                                       False)
+        if hits and self.game.player.cur_hp < 100:
+            # print("test hp well collision")
+            self.game.player.cur_hp += 1
+            self.kill()
+
+        hits = pg.sprite.spritecollide(self,
+                                       self.game.mobs_group,
+                                       False,
+                                       False)
+        if hits:
+            self.kill()
+            # TODO:
+            # Explosion sound
+            pg.mixer.Sound.set_volume(HEALTH_CUBE_EXPLODE_SND, 0.07)
+            pg.mixer.Sound.play(HEALTH_CUBE_EXPLODE_SND)
 
 # TODO:
 class Turret(pg.sprite.Sprite):
